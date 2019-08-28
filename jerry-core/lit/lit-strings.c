@@ -267,15 +267,15 @@ lit_utf8_string_length (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
                         lit_utf8_size_t utf8_buf_size) /**< string size */
 {
   ecma_length_t length = 0;
-  lit_utf8_size_t size = 0;
+  const lit_utf8_byte_t *buf_end_p = utf8_buf_p + utf8_buf_size;
 
-  while (size < utf8_buf_size)
+  while (utf8_buf_p < buf_end_p)
   {
-    size += lit_get_unicode_char_size_by_utf8_first_byte (*(utf8_buf_p + size));
+    utf8_buf_p += lit_get_unicode_char_size_by_utf8_first_byte (*utf8_buf_p);
     length++;
   }
 
-  JERRY_ASSERT (size == utf8_buf_size);
+  JERRY_ASSERT (utf8_buf_p == buf_end_p);
 
   return length;
 } /* lit_utf8_string_length */
@@ -355,9 +355,10 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
   JERRY_ASSERT (buf_p && buf_size);
 
   lit_utf8_byte_t c = buf_p[0];
-  if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
+  if (JERRY_LIKELY ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER))
   {
-    *code_point = (lit_code_point_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
+    JERRY_ASSERT (c == (c & LIT_UTF8_LAST_7_BITS_MASK));
+    *code_point = (lit_code_point_t) (c);
     return 1;
   }
 
@@ -404,9 +405,10 @@ lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with cha
   JERRY_ASSERT (buf_p);
 
   lit_utf8_byte_t c = buf_p[0];
-  if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
+  if (JERRY_LIKELY ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER))
   {
-    *code_point = (ecma_char_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
+    JERRY_ASSERT (c == (c & LIT_UTF8_LAST_7_BITS_MASK));
+    *code_point = (ecma_char_t) (c);
     return 1;
   }
 
@@ -562,11 +564,12 @@ lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, /**< hash to be comb
   JERRY_ASSERT (utf8_buf_p != NULL || utf8_buf_size == 0);
 
   uint32_t hash = hash_basis;
+  const lit_utf8_byte_t * const buf_end_p = utf8_buf_p + utf8_buf_size;
 
-  for (uint32_t i = 0; i < utf8_buf_size; i++)
+  while (utf8_buf_p < buf_end_p)
   {
     /* 16777619 is 32 bit FNV_prime = 2^24 + 2^8 + 0x93 = 16777619 */
-    hash = (hash ^ utf8_buf_p[i]) * 16777619;
+    hash = (hash ^ *utf8_buf_p++) * 16777619;
   }
 
   return (lit_string_hash_t) hash;
@@ -601,15 +604,15 @@ lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 stri
                               ecma_length_t code_unit_offset) /**< ofset of a code_unit */
 {
   lit_utf8_byte_t *current_p = (lit_utf8_byte_t *) utf8_buf_p;
-  ecma_char_t code_unit;
 
-  do
+  while (code_unit_offset--)
   {
     JERRY_ASSERT (current_p < utf8_buf_p + utf8_buf_size);
-    current_p += lit_read_code_unit_from_utf8 (current_p, &code_unit);
+    current_p += lit_get_unicode_char_size_by_utf8_first_byte (*current_p);
   }
-  while (code_unit_offset--);
 
+  ecma_char_t code_unit;
+  lit_read_code_unit_from_utf8 (current_p, &code_unit);
   return code_unit;
 } /* lit_utf8_string_code_unit_at */
 
@@ -621,7 +624,7 @@ lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 stri
 inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
 lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byte_t first_byte) /**< buffer with characters */
 {
-  if ((first_byte & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
+  if (JERRY_LIKELY ((first_byte & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER))
   {
     return 1;
   }
@@ -867,26 +870,8 @@ bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, /**<
                                           const lit_utf8_byte_t *string2_p, /**< utf-8 string */
                                           lit_utf8_size_t string2_size) /**< string size */
 {
-  lit_utf8_byte_t *string1_pos = (lit_utf8_byte_t *) string1_p;
-  lit_utf8_byte_t *string2_pos = (lit_utf8_byte_t *) string2_p;
-  const lit_utf8_byte_t *string1_end_p = string1_p + string1_size;
-  const lit_utf8_byte_t *string2_end_p = string2_p + string2_size;
+  const lit_utf8_size_t size = JERRY_MIN (string1_size, string2_size);
+  const int result = memcmp (string1_p, string2_p, size);
 
-  while (string1_pos < string1_end_p && string2_pos < string2_end_p)
-  {
-    ecma_char_t ch1, ch2;
-    string1_pos += lit_read_code_unit_from_utf8 (string1_pos, &ch1);
-    string2_pos += lit_read_code_unit_from_utf8 (string2_pos, &ch2);
-
-    if (ch1 < ch2)
-    {
-      return true;
-    }
-    else if (ch1 > ch2)
-    {
-      return false;
-    }
-  }
-
-  return (string1_pos >= string1_end_p && string2_pos < string2_end_p);
+  return ((result < 0) || (string1_size < string2_size && result == 0));
 } /* lit_compare_utf8_strings_relational */
