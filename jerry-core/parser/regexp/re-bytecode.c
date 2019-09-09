@@ -40,7 +40,7 @@ void
 re_initialize_regexp_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   const size_t initial_size = JERRY_ALIGNUP (REGEXP_BYTECODE_BLOCK_SIZE + sizeof (re_compiled_code_t), JMEM_ALIGNMENT);
-  bc_ctx_p->block_start_p = jmem_heap_alloc_block (initial_size);
+  bc_ctx_p->block_start_p = jmem_heap_alloc (initial_size);
   bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + initial_size;
   bc_ctx_p->current_p = bc_ctx_p->block_start_p + sizeof (re_compiled_code_t);
 } /* re_initialize_regexp_bytecode */
@@ -65,9 +65,8 @@ re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytec
   JERRY_ASSERT (bc_ctx_p->current_p >= bc_ctx_p->block_start_p);
   const size_t current_ptr_offset = (size_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
-  bc_ctx_p->block_start_p = jmem_heap_realloc_block (bc_ctx_p->block_start_p,
-                                                     old_size,
-                                                     new_size);
+  bc_ctx_p->block_start_p = jmem_heap_realloc (bc_ctx_p->block_start_p, old_size, new_size);
+
   bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + new_size;
   bc_ctx_p->current_p = bc_ctx_p->block_start_p + current_ptr_offset;
 

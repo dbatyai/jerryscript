@@ -80,8 +80,8 @@ jerry_debugger_free_unreferenced_byte_code (void)
     prev_byte_code_free_p = JMEM_CP_GET_POINTER (jerry_debugger_byte_code_free_t,
                                                  byte_code_free_p->prev_cp);
 
-    jmem_heap_free_block (byte_code_free_p,
-                          ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
+    jmem_heap_free (byte_code_free_p,
+                    ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
 
     byte_code_free_p = prev_byte_code_free_p;
   }
@@ -671,7 +671,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
 
     if (recv_buffer_p[0] != *expected_message_type_p)
     {
-      jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
+      jmem_heap_free (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Unexpected message\n");
       jerry_debugger_transport_close ();
       return false;
@@ -681,7 +681,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
 
     if (message_size < sizeof (jerry_debugger_receive_uint8_data_part_t) + 1)
     {
-      jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
+      jmem_heap_free (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
       jerry_debugger_transport_close ();
       return false;
@@ -693,7 +693,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
 
     if (message_size > expected_data)
     {
-      jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
+      jmem_heap_free (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
       jerry_debugger_transport_close ();
       return false;
@@ -767,8 +767,8 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
       jmem_stats_free_byte_code_bytes (((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-      jmem_heap_free_block (byte_code_free_p,
-                            ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
+      jmem_heap_free (byte_code_free_p,
+                      ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
       return true;
     }
 
@@ -966,7 +966,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
       jerry_debugger_uint8_data_t *eval_uint8_data_p;
       size_t eval_data_size = sizeof (jerry_debugger_uint8_data_t) + eval_size;
 
-      eval_uint8_data_p = (jerry_debugger_uint8_data_t *) jmem_heap_alloc_block (eval_data_size);
+      eval_uint8_data_p = (jerry_debugger_uint8_data_t *) jmem_heap_alloc (eval_data_size);
 
       eval_uint8_data_p->uint8_size = eval_size;
       eval_uint8_data_p->uint8_offset = (uint32_t) (message_size - sizeof (jerry_debugger_receive_eval_first_t));
@@ -1016,7 +1016,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
       jerry_debugger_uint8_data_t *client_source_data_p;
       size_t client_source_data_size = sizeof (jerry_debugger_uint8_data_t) + client_source_size;
 
-      client_source_data_p = (jerry_debugger_uint8_data_t *) jmem_heap_alloc_block (client_source_data_size);
+      client_source_data_p = (jerry_debugger_uint8_data_t *) jmem_heap_alloc (client_source_data_size);
 
       client_source_data_p->uint8_size = client_source_size;
       client_source_data_p->uint8_offset = (uint32_t) (message_size
@@ -1189,8 +1189,8 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 
   if (uint8_data != NULL)
   {
-    jmem_heap_free_block (uint8_data,
-                          uint8_data->uint8_size + sizeof (jerry_debugger_uint8_data_t));
+    jmem_heap_free (uint8_data,
+                    uint8_data->uint8_size + sizeof (jerry_debugger_uint8_data_t));
   }
 
   JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_BREAKPOINT_MODE);

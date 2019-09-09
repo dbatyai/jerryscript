@@ -1210,7 +1210,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_PUSH_OBJECT:
         {
           ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                     0,
+                                                     sizeof (ecma_object_t),
                                                      ECMA_OBJECT_TYPE_GENERAL);
 
           *stack_top_p++ = ecma_make_object_value (obj_p);
@@ -1685,7 +1685,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_null (super_value))
           {
             super_class_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                0,
+                                                sizeof (ecma_object_t),
                                                 ECMA_OBJECT_TYPE_GENERAL);
           }
           else
@@ -1782,7 +1782,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = function_obj_value;
 
           ecma_object_t *prototype_class_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                                                   0,
+                                                                                   sizeof (ecma_object_t),
                                                                                    ECMA_OBJECT_TYPE_GENERAL);
           *stack_top_p++ = ecma_make_object_value (prototype_class_p);
 

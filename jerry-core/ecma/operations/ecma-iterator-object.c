@@ -99,7 +99,7 @@ ecma_create_iter_result_object (ecma_value_t value, /**< value */
 
   /* 2. */
   ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                0,
+                                                sizeof (ecma_object_t),
                                                 ECMA_OBJECT_TYPE_GENERAL);
 
   /* 3. */

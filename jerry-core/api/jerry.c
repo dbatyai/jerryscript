@@ -247,7 +247,7 @@ jerry_cleanup (void)
       void *data = (this_p->manager_p->bytes_needed > 0) ? JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p) : NULL;
       this_p->manager_p->finalize_cb (data);
     }
-    jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
+    jmem_heap_free (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
 
   jmem_finalize ();
@@ -275,7 +275,7 @@ jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
     }
   }
 
-  item_p = jmem_heap_alloc_block (sizeof (jerry_context_data_header_t) + manager_p->bytes_needed);
+  item_p = jmem_heap_alloc (sizeof (jerry_context_data_header_t) + manager_p->bytes_needed);
   item_p->manager_p = manager_p;
   item_p->next_p = JERRY_CONTEXT (context_data_p);
   JERRY_CONTEXT (context_data_p) = item_p;
@@ -3385,7 +3385,7 @@ jerry_heap_alloc (size_t size) /**< size of the memory block */
 {
   jerry_assert_api_available ();
 
-  return jmem_heap_alloc_block_null_on_error (size);
+  return jmem_heap_alloc_maybe_null (size);
 } /* jerry_heap_alloc */
 
 /**
@@ -3397,7 +3397,7 @@ jerry_heap_free (void *mem_p, /**< value returned by jerry_heap_alloc */
 {
   jerry_assert_api_available ();
 
-  jmem_heap_free_block (mem_p, size);
+  jmem_heap_free (mem_p, size);
 } /* jerry_heap_free */
 
 /**

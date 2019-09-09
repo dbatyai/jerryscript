@@ -40,7 +40,7 @@ parser_malloc (parser_context_t *context_p, /**< context */
   void *result;
 
   JERRY_ASSERT (size > 0);
-  result = jmem_heap_alloc_block_null_on_error (size);
+  result = jmem_heap_alloc_maybe_null (size);
 
   if (result == NULL)
   {
@@ -56,7 +56,7 @@ inline void JERRY_ATTR_ALWAYS_INLINE
 parser_free (void *ptr, /**< pointer to free */
              size_t size) /**< size of the memory block */
 {
-  jmem_heap_free_block (ptr, size);
+  jmem_heap_free (ptr, size);
 } /* parser_free */
 
 /**
@@ -71,7 +71,7 @@ parser_malloc_local (parser_context_t *context_p, /**< context */
   void *result;
 
   JERRY_ASSERT (size > 0);
-  result = jmem_heap_alloc_block (size);
+  result = jmem_heap_alloc (size);
   if (result == 0)
   {
     parser_raise_error (context_p, PARSER_ERR_OUT_OF_MEMORY);
@@ -86,7 +86,7 @@ void
 parser_free_local (void *ptr, /**< pointer to free */
                    size_t size) /**< size of the memory */
 {
-  jmem_heap_free_block (ptr, size);
+  jmem_heap_free (ptr, size);
 } /* parser_free_local */
 
 /**

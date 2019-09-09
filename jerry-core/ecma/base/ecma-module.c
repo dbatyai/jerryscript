@@ -45,7 +45,7 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
 
   /* The module specifier is cesu8 encoded, we need to convert is to utf8, and zero terminate it,
    * so that OS level functions can handle it. */
-  lit_utf8_byte_t *path_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (size + 1u);
+  lit_utf8_byte_t *path_p = (lit_utf8_byte_t *) jmem_heap_alloc (size + 1u);
 
   lit_utf8_size_t utf8_size;
   utf8_size = lit_convert_cesu8_string_to_utf8_string (char_p,
@@ -63,7 +63,7 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
   {
     JERRY_ASSERT (JERRY_CONTEXT (module_top_context_p)->module_p->path_p != NULL);
     module_path_size = ecma_string_get_size (JERRY_CONTEXT (module_top_context_p)->module_p->path_p);
-    module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (module_path_size + 1);
+    module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc (module_path_size + 1);
 
     lit_utf8_size_t module_utf8_size;
     module_utf8_size = ecma_string_copy_to_utf8_buffer (JERRY_CONTEXT (module_top_context_p)->module_p->path_p,
@@ -73,7 +73,7 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
     module_path_p[module_utf8_size] = LIT_CHAR_NULL;
   }
 
-  lit_utf8_byte_t *normalized_out_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (ECMA_MODULE_MAX_PATH);
+  lit_utf8_byte_t *normalized_out_p = (lit_utf8_byte_t *) jmem_heap_alloc_const (ECMA_MODULE_MAX_PATH);
   size_t normalized_size = jerry_port_normalize_path ((const char *) path_p,
                                                       (char *) normalized_out_p,
                                                       ECMA_MODULE_MAX_PATH,
@@ -85,11 +85,11 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
     ret_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (normalized_out_p, (lit_utf8_size_t) (normalized_size));
   }
 
-  jmem_heap_free_block (path_p, size + 1u);
-  jmem_heap_free_block (normalized_out_p, ECMA_MODULE_MAX_PATH);
+  jmem_heap_free (path_p, size + 1u);
+  jmem_heap_free_const (normalized_out_p, ECMA_MODULE_MAX_PATH);
   if (module_path_p != NULL)
   {
-    jmem_heap_free_block (module_path_p, module_path_size + 1);
+    jmem_heap_free (module_path_p, module_path_size + 1);
   }
 
   return ret_p;
@@ -125,7 +125,7 @@ ecma_module_find_module (ecma_string_t *const path_p) /**< module identifier */
 static ecma_module_t *
 ecma_module_create_module (ecma_string_t *const path_p) /**< module identifier */
 {
-  ecma_module_t *module_p = (ecma_module_t *) jmem_heap_alloc_block (sizeof (ecma_module_t));
+  ecma_module_t *module_p = (ecma_module_t *) jmem_heap_alloc (sizeof (ecma_module_t));
   memset (module_p, 0, sizeof (ecma_module_t));
 
   module_p->path_p = path_p;
@@ -175,7 +175,7 @@ ecma_module_create_native_module (ecma_string_t *const path_p, /**< module ident
 static ecma_module_context_t *
 ecma_module_create_module_context (void)
 {
-  ecma_module_context_t *context_p = (ecma_module_context_t *) jmem_heap_alloc_block (sizeof (ecma_module_context_t));
+  ecma_module_context_t *context_p = (ecma_module_context_t *) jmem_heap_alloc (sizeof (ecma_module_context_t));
   memset (context_p, 0, sizeof (ecma_module_context_t));
 
   return context_p;
@@ -208,7 +208,7 @@ ecma_module_resolve_set_insert (ecma_module_resolve_set_t **set_p, /**< [in, out
   }
 
   ecma_module_resolve_set_t *new_p;
-  new_p = (ecma_module_resolve_set_t *) jmem_heap_alloc_block (sizeof (ecma_module_resolve_set_t));
+  new_p = (ecma_module_resolve_set_t *) jmem_heap_alloc (sizeof (ecma_module_resolve_set_t));
 
   new_p->next_p = *set_p;
   new_p->record.module_p = module_p;
@@ -229,7 +229,7 @@ ecma_module_resolve_set_cleanup (ecma_module_resolve_set_t *set_p) /**< resolve 
   {
     ecma_module_resolve_set_t *next_p = set_p->next_p;
     ecma_deref_ecma_string (set_p->record.name_p);
-    jmem_heap_free_block (set_p, sizeof (ecma_module_resolve_set_t));
+    jmem_heap_free (set_p, sizeof (ecma_module_resolve_set_t));
     set_p = next_p;
   }
 } /* ecma_module_resolve_set_cleanup */
@@ -245,7 +245,7 @@ ecma_module_resolve_stack_push (ecma_module_resolve_stack_t **stack_p, /**< [in,
 {
   JERRY_ASSERT (stack_p != NULL);
   ecma_module_resolve_stack_t *new_frame_p;
-  new_frame_p = (ecma_module_resolve_stack_t *) jmem_heap_alloc_block (sizeof (ecma_module_resolve_stack_t));
+  new_frame_p = (ecma_module_resolve_stack_t *) jmem_heap_alloc (sizeof (ecma_module_resolve_stack_t));
 
   ecma_ref_ecma_string (export_name_p);
   new_frame_p->export_name_p = export_name_p;
@@ -269,7 +269,7 @@ ecma_module_resolve_stack_pop (ecma_module_resolve_stack_t **stack_p) /**< [in, 
   {
     *stack_p = current_p->next_p;
     ecma_deref_ecma_string (current_p->export_name_p);
-    jmem_heap_free_block (current_p, sizeof (ecma_module_resolve_stack_t));
+    jmem_heap_free (current_p, sizeof (ecma_module_resolve_stack_t));
   }
 } /* ecma_module_resolve_stack_pop */
 
@@ -542,7 +542,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
   ecma_module_resolve_stack_t *stack_p = NULL;
 
   module_p->namespace_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                     0,
+                                                     sizeof (ecma_object_t),
                                                      ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_module_resolve_stack_push (&stack_p, module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
@@ -846,7 +846,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   module_p->context_p = ecma_module_create_module_context ();
 
   lit_utf8_size_t module_path_size = ecma_string_get_size (module_p->path_p);
-  lit_utf8_byte_t *module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (module_path_size + 1);
+  lit_utf8_byte_t *module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc (module_path_size + 1);
 
   lit_utf8_size_t module_path_utf8_size;
   module_path_utf8_size = ecma_string_copy_to_utf8_buffer (module_p->path_p,
@@ -856,7 +856,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
 
   size_t source_size = 0;
   uint8_t *source_p = jerry_port_read_source ((const char *) module_path_p, &source_size);
-  jmem_heap_free_block (module_path_p, module_path_size + 1);
+  jmem_heap_free (module_path_p, module_path_size + 1);
 
   if (source_p == NULL)
   {
@@ -982,7 +982,7 @@ ecma_module_release_module_names (ecma_module_names_t *module_name_p) /**< first
 
     ecma_deref_ecma_string (module_name_p->imex_name_p);
     ecma_deref_ecma_string (module_name_p->local_name_p);
-    jmem_heap_free_block (module_name_p, sizeof (ecma_module_names_t));
+    jmem_heap_free (module_name_p, sizeof (ecma_module_names_t));
 
     module_name_p = next_p;
   }
@@ -999,7 +999,7 @@ ecma_module_release_module_nodes (ecma_module_node_t *module_node_p) /**< first 
     ecma_module_node_t *next_p = module_node_p->next_p;
 
     ecma_module_release_module_names (module_node_p->module_names_p);
-    jmem_heap_free_block (module_node_p, sizeof (ecma_module_node_t));
+    jmem_heap_free (module_node_p, sizeof (ecma_module_node_t));
 
     module_node_p = next_p;
   }
@@ -1016,7 +1016,7 @@ ecma_module_release_module_context (ecma_module_context_t *module_context_p) /**
   ecma_module_release_module_nodes (module_context_p->indirect_exports_p);
   ecma_module_release_module_nodes (module_context_p->star_exports_p);
 
-  jmem_heap_free_block (module_context_p, sizeof (ecma_module_context_t));
+  jmem_heap_free (module_context_p, sizeof (ecma_module_context_t));
 } /* ecma_module_release_module_context */
 
 /**
@@ -1055,7 +1055,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
   }
 
 finished:
-  jmem_heap_free_block (module_p, sizeof (ecma_module_t));
+  jmem_heap_free (module_p, sizeof (ecma_module_t));
 } /* ecma_module_release_module */
 
 /**

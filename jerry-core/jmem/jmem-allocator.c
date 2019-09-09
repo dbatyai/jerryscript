@@ -158,8 +158,6 @@ jmem_init (void)
 void
 jmem_finalize (void)
 {
-  jmem_pools_finalize ();
-
 #if ENABLED (JERRY_MEM_STATS)
   if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
   {

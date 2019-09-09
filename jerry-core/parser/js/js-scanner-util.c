@@ -98,7 +98,7 @@ scanner_malloc (parser_context_t *context_p, /**< context */
   void *result;
 
   JERRY_ASSERT (size > 0);
-  result = jmem_heap_alloc_block_null_on_error (size);
+  result = jmem_heap_alloc_maybe_null (size);
 
   if (result == NULL)
   {
@@ -118,7 +118,7 @@ inline void JERRY_ATTR_ALWAYS_INLINE
 scanner_free (void *ptr, /**< pointer to free */
               size_t size) /**< size of the memory block */
 {
-  jmem_heap_free_block (ptr, size);
+  jmem_heap_free (ptr, size);
 } /* scanner_free */
 
 /**
@@ -268,7 +268,7 @@ scanner_release_next (parser_context_t *context_p, /**< context */
 {
   scanner_info_t *next_p = context_p->next_scanner_info_p->next_p;
 
-  jmem_heap_free_block (context_p->next_scanner_info_p, size);
+  jmem_heap_free (context_p->next_scanner_info_p, size);
   context_p->next_scanner_info_p = next_p;
 } /* scanner_release_next */
 
@@ -307,7 +307,7 @@ scanner_release_active (parser_context_t *context_p, /**< context */
 {
   scanner_info_t *next_p = context_p->active_scanner_info_p->next_p;
 
-  jmem_heap_free_block (context_p->active_scanner_info_p, size);
+  jmem_heap_free (context_p->active_scanner_info_p, size);
   context_p->active_scanner_info_p = next_p;
 } /* scanner_release_active */
 
@@ -321,7 +321,7 @@ scanner_release_switch_cases (scanner_case_info_t *case_p) /**< case list */
   {
     scanner_case_info_t *next_p = case_p->next_p;
 
-    jmem_heap_free_block (case_p, sizeof (scanner_case_info_t));
+    jmem_heap_free (case_p, sizeof (scanner_case_info_t));
     case_p = next_p;
   }
 } /* scanner_release_switch_cases */

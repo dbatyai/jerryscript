@@ -2238,7 +2238,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
   if (length > 0 && char_p == local_byte_array)
   {
-    literal_p->u.char_p = (uint8_t *) jmem_heap_alloc_block (length);
+    literal_p->u.char_p = (uint8_t *) jmem_heap_alloc (length);
     memcpy ((uint8_t *) literal_p->u.char_p, char_p, length);
     status_flags = 0;
   }

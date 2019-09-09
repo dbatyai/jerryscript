@@ -168,8 +168,8 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
     if (client_source_data_p != NULL)
     {
       /* The data may partly arrived. */
-      jmem_heap_free_block (client_source_data_p,
-                            client_source_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
+      jmem_heap_free (client_source_data_p,
+                      client_source_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
     }
 
     return ret_type;

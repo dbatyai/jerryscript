@@ -751,7 +751,7 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 
     ecma_native_pointer_t *next_p = native_pointer_p->next_p;
 
-    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+    jmem_heap_free (native_pointer_p, sizeof (ecma_native_pointer_t));
 
     native_pointer_p = next_p;
   }
@@ -777,10 +777,10 @@ ecma_free_fast_access_array (ecma_object_t *object_p) /**< fast access mode arra
       ecma_free_value_if_not_object (values_p[i]);
     }
 
-    jmem_heap_free_block (values_p, aligned_length * sizeof (ecma_value_t));
+    jmem_heap_free (values_p, aligned_length * sizeof (ecma_value_t));
   }
 
-  ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+  ecma_dealloc_object (object_p, sizeof (ecma_extended_object_t));
 } /* ecma_free_fast_access_array */
 
 #if ENABLED (JERRY_ES2015)
@@ -975,7 +975,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ecma_gc_free_properties (object_p);
     }
 
-    ecma_dealloc_object (object_p);
+    ecma_dealloc_object (object_p, sizeof (ecma_object_t));
     return;
   }
 
@@ -1000,7 +1000,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ext_object_size += (2 * sizeof (uint32_t)) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
 
       ecma_gc_free_properties (object_p);
-      ecma_dealloc_extended_object (object_p, ext_object_size);
+      ecma_dealloc_object (object_p, ext_object_size);
       return;
     }
   }
@@ -1010,7 +1010,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     case ECMA_OBJECT_TYPE_GENERAL:
     {
       ecma_gc_free_properties (object_p);
-      ecma_dealloc_object (object_p);
+      ecma_dealloc_object (object_p, sizeof (ecma_object_t));
       return;
     }
     case ECMA_OBJECT_TYPE_ARRAY:
@@ -1321,7 +1321,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
   }
 
   ecma_gc_free_properties (object_p);
-  ecma_dealloc_extended_object (object_p, ext_object_size);
+  ecma_dealloc_object (object_p, ext_object_size);
 } /* ecma_gc_free_object */
 
 /**
@@ -1496,6 +1496,11 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
       ecma_gc_run ();
     }
 
+#if ENABLED (JERRY_SYSTEM_ALLOCATOR)
+    jmem_heap_reclaim_pools ();
+#else /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+    jmem_heap_defragment ();
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
     return;
   }
   else if (pressure == JMEM_PRESSURE_HIGH)
@@ -1551,7 +1556,7 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
     }
 #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
-    jmem_pools_collect_empty ();
+    jmem_heap_reclaim_pools ();
     return;
   }
   else if (JERRY_UNLIKELY (pressure == JMEM_PRESSURE_FULL))

@@ -58,7 +58,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
     ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
 
-    native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+    native_pointer_p = jmem_heap_alloc_const (sizeof (ecma_native_pointer_t));
 
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
   }
@@ -89,7 +89,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
       iter_p = iter_p->next_p;
     }
 
-    native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+    native_pointer_p = jmem_heap_alloc_const (sizeof (ecma_native_pointer_t));
 
     iter_p->next_p = native_pointer_p;
   }
@@ -196,7 +196,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
           /* Only one native pointer property exists, so the property can be deleted as well. */
           ecma_op_general_object_delete (obj_p, name_p, false);
 
-          jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+          jmem_heap_free_const (native_pointer_p, sizeof (ecma_native_pointer_t));
           return true;
         }
         else
@@ -205,7 +205,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
              In this case the second element's data is copied to the head of the chain, and freed as well. */
           ecma_native_pointer_t *next_p = native_pointer_p->next_p;
           memcpy (native_pointer_p, next_p, sizeof (ecma_native_pointer_t));
-          jmem_heap_free_block (next_p, sizeof (ecma_native_pointer_t));
+          jmem_heap_free_const (next_p, sizeof (ecma_native_pointer_t));
           return true;
         }
       }
@@ -214,7 +214,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
         /* There are at least two native pointers and not the first element should be deleted.
            In this case the current element's next element reference is copied to the previous element. */
         prev_p->next_p = native_pointer_p->next_p;
-        jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+        jmem_heap_free_const (native_pointer_p, sizeof (ecma_native_pointer_t));
         return true;
       }
     }

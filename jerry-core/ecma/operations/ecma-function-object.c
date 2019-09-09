@@ -1465,7 +1465,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     {
       /* 6. */
       new_this_obj_p = ecma_create_object (ecma_get_object_from_value (prototype_prop_value),
-                                           0,
+                                           sizeof (ecma_object_t),
                                            ECMA_OBJECT_TYPE_GENERAL);
     }
     else
@@ -1473,7 +1473,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       /* 7. */
       ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-      new_this_obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+      new_this_obj_p = ecma_create_object (prototype_p, sizeof (ecma_object_t), ECMA_OBJECT_TYPE_GENERAL);
     }
 
     ecma_free_value (prototype_prop_value);
@@ -1598,7 +1598,7 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
     if (byte_code_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
     {
       proto_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
-                                           0,
+                                           sizeof (ecma_object_t),
                                            ECMA_OBJECT_TYPE_GENERAL);
       init_constructor = false;
     }

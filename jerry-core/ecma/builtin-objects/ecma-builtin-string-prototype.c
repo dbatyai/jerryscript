@@ -544,12 +544,12 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
 cleanup_replace:
   if (input_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) replace_ctx.string_p, replace_ctx.string_size);
+    jmem_heap_free ((void *) replace_ctx.string_p, replace_ctx.string_size);
   }
 
   if (search_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) search_buf_p, search_size);
+    jmem_heap_free ((void *) search_buf_p, search_size);
   }
 
   if (replace_ctx.replace_str_p != NULL)
@@ -887,12 +887,12 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
 cleanup_buffers:
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) string_buffer_p, string_size);
+    jmem_heap_free ((void *) string_buffer_p, string_size);
   }
 
   if (separator_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) separator_buffer_p, separator_size);
+    jmem_heap_free ((void *) separator_buffer_p, separator_size);
   }
 
 cleanup_separator:

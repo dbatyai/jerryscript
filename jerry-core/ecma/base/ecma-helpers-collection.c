@@ -35,12 +35,12 @@ ecma_collection_t *
 ecma_new_collection (void)
 {
   ecma_collection_t *collection_p;
-  collection_p = (ecma_collection_t *) jmem_heap_alloc_block (sizeof (ecma_collection_t));
+  collection_p = (ecma_collection_t *) jmem_heap_alloc_const (sizeof (ecma_collection_t));
 
   collection_p->item_count = 0;
   collection_p->capacity = ECMA_COLLECTION_INITIAL_CAPACITY;
   const uint32_t size = ECMA_COLLECTION_ALLOCATED_SIZE (ECMA_COLLECTION_INITIAL_CAPACITY);
-  collection_p->buffer_p = (ecma_value_t *) jmem_heap_alloc_block (size);
+  collection_p->buffer_p = (ecma_value_t *) jmem_heap_alloc (size);
 
   return collection_p;
 } /* ecma_new_collection */
@@ -53,8 +53,8 @@ ecma_collection_destroy (ecma_collection_t *collection_p) /**< value collection 
 {
   JERRY_ASSERT (collection_p != NULL);
 
-  jmem_heap_free_block (collection_p->buffer_p, ECMA_COLLECTION_ALLOCATED_SIZE (collection_p->capacity));
-  jmem_heap_free_block (collection_p, sizeof (ecma_collection_t));
+  jmem_heap_free (collection_p->buffer_p, ECMA_COLLECTION_ALLOCATED_SIZE (collection_p->capacity));
+  jmem_heap_free_const (collection_p, sizeof (ecma_collection_t));
 } /* ecma_collection_destroy */
 
 /**
@@ -137,7 +137,7 @@ ecma_collection_push_back (ecma_collection_t *collection_p, /**< value collectio
   const uint32_t old_size = ECMA_COLLECTION_ALLOCATED_SIZE (collection_p->capacity);
   const uint32_t new_size = ECMA_COLLECTION_ALLOCATED_SIZE (new_capacity);
 
-  buffer_p = jmem_heap_realloc_block (buffer_p, old_size, new_size);
+  buffer_p = jmem_heap_realloc (buffer_p, old_size, new_size);
   buffer_p[collection_p->item_count++] = value;
   collection_p->capacity = new_capacity;
 

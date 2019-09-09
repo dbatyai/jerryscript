@@ -573,7 +573,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
       {
         const lit_utf8_byte_t *matched_p = NULL;
         const size_t captures_size = re_ctx_p->captures_count * sizeof (ecma_regexp_capture_t);
-        ecma_regexp_capture_t *saved_captures_p = (ecma_regexp_capture_t *) jmem_heap_alloc_block (captures_size);
+        ecma_regexp_capture_t *saved_captures_p = (ecma_regexp_capture_t *) jmem_heap_alloc (captures_size);
         memcpy (saved_captures_p, re_ctx_p->captures_p, captures_size);
 
         do
@@ -586,7 +586,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
             if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
             {
-              jmem_heap_free_block (saved_captures_p, captures_size);
+              jmem_heap_free (saved_captures_p, captures_size);
               return matched_p;
             }
           }
@@ -613,7 +613,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
           memcpy (re_ctx_p->captures_p, saved_captures_p, captures_size);
         }
 
-        jmem_heap_free_block (saved_captures_p, captures_size);
+        jmem_heap_free (saved_captures_p, captures_size);
         return matched_p;
       }
       case RE_OP_CHAR_CLASS:
@@ -1199,16 +1199,23 @@ ecma_regexp_initialize_context (ecma_regexp_ctx_t *ctx_p, /**< regexp context */
   ctx_p->input_end_p = input_end_p;
 
   ctx_p->captures_count = bc_p->captures_count;
-  ctx_p->captures_p = jmem_heap_alloc_block (ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
+  JERRY_ASSERT (ctx_p->captures_count > 0);
+  ctx_p->captures_p = jmem_heap_alloc (ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
   memset (ctx_p->captures_p, 0, ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
 
   ctx_p->non_captures_count = bc_p->non_captures_count;
-  ctx_p->non_captures_p = jmem_heap_alloc_block (ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
-  memset (ctx_p->non_captures_p, 0, ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
+  if (ctx_p->non_captures_count > 0)
+  {
+    ctx_p->non_captures_p = jmem_heap_alloc (ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
+    memset (ctx_p->non_captures_p, 0, ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
+  }
 
   const uint32_t iters_length = ctx_p->captures_count + ctx_p->non_captures_count - 1;
-  ctx_p->iterations_p = jmem_heap_alloc_block (iters_length * sizeof (uint32_t));
-  memset (ctx_p->iterations_p, 0, iters_length * sizeof (uint32_t));
+  if (iters_length > 0)
+  {
+    ctx_p->iterations_p = jmem_heap_alloc (iters_length * sizeof (uint32_t));
+    memset (ctx_p->iterations_p, 0, iters_length * sizeof (uint32_t));
+  }
 } /* ecma_regexp_initialize_context */
 
 /**
@@ -1218,15 +1225,17 @@ static void
 ecma_regexp_cleanup_context (ecma_regexp_ctx_t *ctx_p) /**< regexp context */
 {
   JERRY_ASSERT (ctx_p != NULL);
-  jmem_heap_free_block (ctx_p->captures_p, ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
-  if (ctx_p->non_captures_p != NULL)
+  jmem_heap_free (ctx_p->captures_p, ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
+
+  if (ctx_p->non_captures_count > 0)
   {
-    jmem_heap_free_block (ctx_p->non_captures_p, ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
+    jmem_heap_free (ctx_p->non_captures_p, ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
   }
-  if (ctx_p->iterations_p != NULL)
+
+  const uint32_t iters_length = ctx_p->captures_count + ctx_p->non_captures_count - 1;
+  if (iters_length > 0)
   {
-    const uint32_t iters_length = ctx_p->captures_count + ctx_p->non_captures_count - 1;
-    jmem_heap_free_block (ctx_p->iterations_p, iters_length * sizeof (uint32_t));
+    jmem_heap_free (ctx_p->iterations_p, iters_length * sizeof (uint32_t));
   }
 } /* ecma_regexp_cleanup_context */
 
@@ -1266,13 +1275,13 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
      * which will always result in an empty string match. */
     re_ctx.captures_count = 1;
 
-    re_ctx.captures_p = jmem_heap_alloc_block (sizeof (ecma_regexp_capture_t));
+    re_ctx.captures_p = jmem_heap_alloc_const (sizeof (ecma_regexp_capture_t));
     re_ctx.captures_p->begin_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
     re_ctx.captures_p->end_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
 
     ret_value = ecma_regexp_create_result_object (&re_ctx, input_string_p, 0);
 
-    jmem_heap_free_block (re_ctx.captures_p, sizeof (ecma_regexp_capture_t));
+    jmem_heap_free (re_ctx.captures_p, sizeof (ecma_regexp_capture_t));
     return ret_value;
 #endif /* ENABLED (JERRY_ES2015) */
   }
@@ -1480,7 +1489,7 @@ cleanup_context:
 cleanup_string:
   if (input_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) input_buffer_p, input_size);
+    jmem_heap_free ((void *) input_buffer_p, input_size);
   }
 
   return ret_value;
@@ -1681,7 +1690,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
   if (flags_str_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) flags_buffer_p, flags_size);
+    jmem_heap_free ((void *) flags_buffer_p, flags_size);
   }
 
   /* 12. */
@@ -2105,7 +2114,7 @@ cleanup_context:
 cleanup_buffer:
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) string_buffer_p, string_size);
+    jmem_heap_free ((void *) string_buffer_p, string_size);
   }
 cleanup_string:
   ecma_deref_ecma_string (string_p);
@@ -2306,7 +2315,7 @@ cleanup_context:
 
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) ctx_p->string_p, ctx_p->string_size);
+    jmem_heap_free ((void *) ctx_p->string_p, ctx_p->string_size);
   }
 
   return result;
@@ -2819,7 +2828,7 @@ cleanup_builder:
 cleanup_chars:
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) replace_ctx.string_p, replace_ctx.string_size);
+    jmem_heap_free ((void *) replace_ctx.string_p, replace_ctx.string_size);
   }
 
 cleanup_results:

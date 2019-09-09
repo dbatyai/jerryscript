@@ -51,7 +51,7 @@ main (void)
 
     for (size_t j = 0; j < subiters; j++)
     {
-      ptrs[j] = (uint8_t *) jmem_pools_alloc (TEST_CHUNK_SIZE);
+      ptrs[j] = (uint8_t *) jmem_heap_alloc_const (TEST_CHUNK_SIZE);
 
       if (ptrs[j] != NULL)
       {
@@ -70,14 +70,14 @@ main (void)
     {
       if (rand () % 256 == 0)
       {
-        jmem_pools_collect_empty ();
+        jmem_heap_reclaim_pools ();
       }
 
       if (ptrs[j] != NULL)
       {
         TEST_ASSERT (!memcmp (data[j], ptrs[j], TEST_CHUNK_SIZE));
 
-        jmem_pools_free (ptrs[j], TEST_CHUNK_SIZE);
+        jmem_heap_free_const (ptrs[j], TEST_CHUNK_SIZE);
       }
     }
   }

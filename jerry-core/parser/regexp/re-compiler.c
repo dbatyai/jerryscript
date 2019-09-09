@@ -888,7 +888,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   {
     /* Compilation failed, free bytecode. */
     JERRY_TRACE_MSG ("RegExp compilation failed!\n");
-    jmem_heap_free_block (bc_ctx.block_start_p, byte_code_size);
+    jmem_heap_free (bc_ctx.block_start_p, byte_code_size);
     *out_bytecode_p = NULL;
   }
   else

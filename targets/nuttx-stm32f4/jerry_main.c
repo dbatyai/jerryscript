@@ -63,7 +63,7 @@ print_help (char *name)
 /**
  * Read source code into buffer.
  *
- * Returned value must be freed with jmem_heap_free_block if it's not NULL.
+ * Returned value must be freed with jmem_heap_free if it's not NULL.
  * @return NULL, if read or allocation has failed
  *         pointer to the allocated memory block, otherwise
  */

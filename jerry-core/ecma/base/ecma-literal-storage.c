@@ -49,7 +49,7 @@ ecma_free_symbol_list (jmem_cpointer_t symbol_list_cp) /**< symbol list */
     }
 
     jmem_cpointer_t next_item_cp = symbol_list_p->next_cp;
-    jmem_pools_free (symbol_list_p, sizeof (ecma_lit_storage_item_t));
+    jmem_heap_free_const (symbol_list_p, sizeof (ecma_lit_storage_item_t));
     symbol_list_cp = next_item_cp;
   }
 } /* ecma_free_symbol_list */
@@ -78,7 +78,7 @@ ecma_free_string_list (jmem_cpointer_t string_list_cp) /**< string list */
     }
 
     jmem_cpointer_t next_item_cp = string_list_p->next_cp;
-    jmem_pools_free (string_list_p, sizeof (ecma_lit_storage_item_t));
+    jmem_heap_free_const (string_list_p, sizeof (ecma_lit_storage_item_t));
     string_list_cp = next_item_cp;
   }
 } /* ecma_free_string_list */
@@ -104,7 +104,7 @@ ecma_free_number_list (jmem_cpointer_t number_list_cp) /**< string list */
     }
 
     jmem_cpointer_t next_item_cp = number_list_p->next_cp;
-    jmem_pools_free (number_list_p, sizeof (ecma_number_storage_item_t));
+    jmem_heap_free_const (number_list_p, sizeof (ecma_number_storage_item_t));
     number_list_cp = next_item_cp;
   }
 } /* ecma_free_number_list */
@@ -182,7 +182,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
   }
 
   ecma_lit_storage_item_t *new_item_p;
-  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
+  new_item_p = (ecma_lit_storage_item_t *) jmem_heap_alloc_const (sizeof (ecma_lit_storage_item_t));
 
   new_item_p->values[0] = result;
   for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
@@ -258,7 +258,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
   }
 
   ecma_number_storage_item_t *new_item_p;
-  new_item_p = (ecma_number_storage_item_t *) jmem_pools_alloc (sizeof (ecma_number_storage_item_t));
+  new_item_p = (ecma_number_storage_item_t *) jmem_heap_alloc_const (sizeof (ecma_number_storage_item_t));
 
   new_item_p->values[0] = result;
   for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
@@ -463,7 +463,14 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
   lit_mem_to_snapshot_id_map_entry_t *map_p;
   ecma_length_t total_count = lit_pool_p->item_count;
 
-  map_p = jmem_heap_alloc_block (total_count * sizeof (lit_mem_to_snapshot_id_map_entry_t));
+  if (total_count > 0)
+  {
+    map_p = jmem_heap_alloc (total_count * sizeof (lit_mem_to_snapshot_id_map_entry_t));
+  }
+  else
+  {
+    map_p = NULL;
+  }
 
   /* Set return values (no error is possible from here). */
   JERRY_ASSERT ((*in_out_buffer_offset_p % sizeof (uint32_t)) == 0);

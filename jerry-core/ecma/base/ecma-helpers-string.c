@@ -1085,7 +1085,7 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_p, /**< ecma-string
 
   if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) chars_p, size);
+    jmem_heap_free ((void *) chars_p, size);
   }
 
   JERRY_ASSERT (size <= buffer_size);
@@ -1424,7 +1424,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         }
         else
         {
-          result_p = (const lit_utf8_byte_t *) jmem_heap_alloc_block (size);
+          result_p = (const lit_utf8_byte_t *) jmem_heap_alloc (size);
           *flags_p |= ECMA_STRING_FLAG_MUST_BE_FREED;
         }
 
@@ -1476,7 +1476,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         }
         else
         {
-          result_p = (const lit_utf8_byte_t *) jmem_heap_alloc_block (size);
+          result_p = (const lit_utf8_byte_t *) jmem_heap_alloc (size);
           *flags_p |= ECMA_STRING_FLAG_MUST_BE_FREED;
         }
 
@@ -2477,7 +2477,7 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 
   if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) utf8_str_p, utf8_str_size);
+    jmem_heap_free ((void *) utf8_str_p, utf8_str_size);
   }
 
   return ret_string_p;
@@ -2492,7 +2492,7 @@ ecma_stringbuilder_t
 ecma_stringbuilder_create (void)
 {
   const lit_utf8_size_t initial_size = sizeof (ecma_ascii_string_t);
-  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc (initial_size);
   header_p->current_size = initial_size;
 #if ENABLED (JERRY_MEM_STATS)
   jmem_stats_allocate_string_bytes (initial_size);
@@ -2513,7 +2513,7 @@ ecma_stringbuilder_create_from (ecma_string_t *string_p) /**< ecma string */
   const lit_utf8_size_t string_size = ecma_string_get_size (string_p);
   const lit_utf8_size_t initial_size = string_size + (lit_utf8_size_t) sizeof (ecma_ascii_string_t);
 
-  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc (initial_size);
   header_p->current_size = initial_size;
 #if ENABLED (JERRY_MEM_STATS)
   jmem_stats_allocate_string_bytes (initial_size);
@@ -2539,7 +2539,7 @@ ecma_stringbuilder_create_raw (const lit_utf8_byte_t *data_p, /**< pointer to da
 {
   const lit_utf8_size_t initial_size = data_size + (lit_utf8_size_t) sizeof (ecma_ascii_string_t);
 
-  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc (initial_size);
   header_p->current_size = initial_size;
 #if ENABLED (JERRY_MEM_STATS)
   jmem_stats_allocate_string_bytes (initial_size);
@@ -2564,7 +2564,7 @@ ecma_stringbuilder_grow (ecma_stringbuilder_t *builder_p, /**< string builder */
   JERRY_ASSERT (header_p != NULL);
 
   const lit_utf8_size_t new_size = header_p->current_size + required_size;
-  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, new_size);
+  header_p = jmem_heap_realloc (header_p, header_p->current_size, new_size);
   header_p->current_size = new_size;
   builder_p->header_p = header_p;
 
@@ -2620,7 +2620,7 @@ ecma_stringbuilder_revert (ecma_stringbuilder_t *builder_p, /**< string builder 
   jmem_stats_free_string_bytes (header_p->current_size - new_size);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, new_size);
+  header_p = jmem_heap_realloc (header_p, header_p->current_size, new_size);
   header_p->current_size = new_size;
   builder_p->header_p = header_p;
 } /* ecma_stringbuilder_revert */
@@ -2742,7 +2742,7 @@ ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p) /**< string builde
   }
 
   const size_t utf8_string_size = string_size + container_size;
-  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, utf8_string_size);
+  header_p = jmem_heap_realloc (header_p, header_p->current_size, utf8_string_size);
   memmove (((lit_utf8_byte_t *) header_p + container_size),
            ECMA_STRINGBUILDER_STRING_PTR (header_p),
            string_size);
@@ -2781,7 +2781,7 @@ ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder
 {
   JERRY_ASSERT (builder_p->header_p != NULL);
   const lit_utf8_size_t size = builder_p->header_p->current_size;
-  jmem_heap_free_block (builder_p->header_p, size);
+  jmem_heap_free (builder_p->header_p, size);
 
 #ifndef JERRY_NDEBUG
   builder_p->header_p = NULL;

@@ -176,7 +176,7 @@ ecma_proxy_create_revocable (ecma_value_t target, /**< target argument */
 
   /* 5. */
   ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                             0,
+                                             sizeof (ecma_object_t),
                                              ECMA_OBJECT_TYPE_GENERAL);
 
   /* 6. */

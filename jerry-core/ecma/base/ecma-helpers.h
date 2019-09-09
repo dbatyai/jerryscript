@@ -118,7 +118,7 @@ typedef enum
   if (utf8_ptr ## flags & ECMA_STRING_FLAG_MUST_BE_FREED) \
   { \
     JERRY_ASSERT (utf8_ptr != NULL); \
-    jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
+    jmem_heap_free ((void *) utf8_ptr, utf8_str_size); \
   }
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY

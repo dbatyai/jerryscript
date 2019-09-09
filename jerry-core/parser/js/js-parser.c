@@ -77,7 +77,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 #if !ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
         else if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
+          jmem_heap_free ((void *) literal_p->u.char_p, literal_p->prop.length);
           /* This literal should not be freed even if an error is encountered later. */
           literal_p->status_flags |= LEXER_FLAG_SOURCE_PTR;
         }
@@ -132,7 +132,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
       if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
       {
-        jmem_heap_free_block ((void *) char_p, literal_p->prop.length);
+        jmem_heap_free ((void *) char_p, literal_p->prop.length);
         /* This literal should not be freed even if an error is encountered later. */
         literal_p->status_flags |= LEXER_FLAG_SOURCE_PTR;
       }
@@ -237,7 +237,7 @@ parser_init_literal_pool (parser_context_t *context_p, /**< context */
         if (!context_p->is_show_opcodes
             && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
+          jmem_heap_free ((void *) literal_p->u.char_p, literal_p->prop.length);
         }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
         break;
@@ -1543,7 +1543,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       if ((literal_p->type == LEXER_IDENT_LITERAL || literal_p->type == LEXER_STRING_LITERAL)
           && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
       {
-        jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
+        jmem_heap_free ((void *) literal_p->u.char_p, literal_p->prop.length);
       }
     }
   }

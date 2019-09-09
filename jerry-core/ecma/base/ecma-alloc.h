@@ -30,24 +30,12 @@
  *
  * @return pointer to allocated memory
  */
-ecma_object_t *ecma_alloc_object (void);
+ecma_object_t *ecma_alloc_object (const size_t size);
 
 /**
  * Dealloc memory from an ecma-object
  */
-void ecma_dealloc_object (ecma_object_t *object_p);
-
-/**
- * Allocate memory for extended object
- *
- * @return pointer to allocated memory
- */
-ecma_extended_object_t *ecma_alloc_extended_object (size_t size);
-
-/**
- * Dealloc memory of an extended object
- */
-void ecma_dealloc_extended_object (ecma_object_t *object_p, size_t size);
+void ecma_dealloc_object (ecma_object_t *object_p, const size_t size);
 
 /**
  * Allocate memory for ecma-number

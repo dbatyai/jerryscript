@@ -616,7 +616,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   if (copy_bytecode
       || (header_size + (literal_end * sizeof (uint16_t)) + BYTECODE_NO_COPY_THRESHOLD > code_size))
   {
-    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (code_size);
+    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc (code_size);
 
 #if ENABLED (JERRY_MEM_STATS)
     jmem_stats_allocate_byte_code_bytes (code_size);
@@ -638,7 +638,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
     new_code_size = JERRY_ALIGNUP (new_code_size, JMEM_ALIGNMENT);
 
-    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (new_code_size);
+    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc (new_code_size);
 
 #if ENABLED (JERRY_MEM_STATS)
     jmem_stats_allocate_byte_code_bytes (new_code_size);
@@ -835,7 +835,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
 
   if (lit_map_p != NULL)
   {
-    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
+    jmem_heap_free (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
   }
 
   ecma_bytecode_deref (bytecode_data_p);
@@ -1346,7 +1346,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
   if (lit_map_p != NULL)
   {
-    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
+    jmem_heap_free (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
   }
 
   *error_p = NULL;

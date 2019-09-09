@@ -298,7 +298,7 @@ parser_module_context_init (void)
   if (JERRY_CONTEXT (module_top_context_p) == NULL)
   {
     ecma_module_context_t *module_context_p;
-    module_context_p = (ecma_module_context_t *) jmem_heap_alloc_block (sizeof (ecma_module_context_t));
+    module_context_p = (ecma_module_context_t *) jmem_heap_alloc_const (sizeof (ecma_module_context_t));
     memset (module_context_p, 0, sizeof (ecma_module_context_t));
     JERRY_CONTEXT (module_top_context_p) = module_context_p;
 

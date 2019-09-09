@@ -112,7 +112,7 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
                                                                                               the object
                                                                                               (can be NULL) */
 {
-  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, sizeof (ecma_object_t), ECMA_OBJECT_TYPE_GENERAL);
 
   /*
    * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
@@ -555,7 +555,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
-      getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
+      getter_setter_pair_p = jmem_heap_alloc_const (sizeof (ecma_getter_setter_pointers_t));
       getter_setter_pair_p->getter_cp = JMEM_CP_NULL;
       getter_setter_pair_p->setter_cp = JMEM_CP_NULL;
       ECMA_SET_NON_NULL_POINTER (value_p->getter_setter_pair_cp, getter_setter_pair_p);
@@ -571,7 +571,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
                                                         value_p->getter_setter_pair_cp);
-      jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
+      jmem_heap_free_const (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
       value_p->value = ECMA_VALUE_UNDEFINED;
     }

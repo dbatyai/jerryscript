@@ -134,7 +134,7 @@ ecma_op_new_fast_array_object (ecma_length_t length) /**< length of the new fast
 
   if (length != 0)
   {
-    values_p = (ecma_value_t *) jmem_heap_alloc_block_null_on_error (aligned_length * sizeof (ecma_value_t));
+    values_p = (ecma_value_t *) jmem_heap_alloc_maybe_null (aligned_length * sizeof (ecma_value_t));
 
     if (JERRY_UNLIKELY (values_p == NULL))
     {
@@ -218,7 +218,7 @@ ecma_fast_array_convert_to_normal (ecma_object_t *object_p) /**< fast access mod
   }
 
   ext_obj_p->u.array.u.length_prop = (uint8_t) (ext_obj_p->u.array.u.length_prop & ~ECMA_FAST_ARRAY_FLAG);
-  jmem_heap_free_block (values_p, aligned_length * sizeof (ecma_value_t));
+  jmem_heap_free (values_p, aligned_length * sizeof (ecma_value_t));
   ECMA_SET_POINTER (object_p->u1.property_list_cp, property_pair_p);
 
   ecma_deref_object (object_p);
@@ -337,14 +337,14 @@ ecma_fast_array_extend (ecma_object_t *object_p, /**< fast access mode array obj
 
   if (object_p->u1.property_list_cp == JMEM_CP_NULL)
   {
-    new_values_p = jmem_heap_alloc_block (new_length_aligned * sizeof (ecma_value_t));
+    new_values_p = jmem_heap_alloc (new_length_aligned * sizeof (ecma_value_t));
   }
   else
   {
     ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
-    new_values_p = (ecma_value_t *) jmem_heap_realloc_block (values_p,
-                                                             old_length_aligned * sizeof (ecma_value_t),
-                                                             new_length_aligned * sizeof (ecma_value_t));
+    new_values_p = (ecma_value_t *) jmem_heap_realloc (values_p,
+                                                       old_length_aligned * sizeof (ecma_value_t),
+                                                       new_length_aligned * sizeof (ecma_value_t));
   }
 
   for (uint32_t i = old_length; i < new_length_aligned; i++)
@@ -436,7 +436,7 @@ ecma_delete_fast_array_properties (ecma_object_t *object_p, /**< fast access mod
 
   if (new_length == 0)
   {
-    jmem_heap_free_block (values_p, old_aligned_length * sizeof (ecma_value_t));
+    jmem_heap_free (values_p, old_aligned_length * sizeof (ecma_value_t));
     new_property_list_cp = JMEM_CP_NULL;
   }
   else
@@ -444,9 +444,9 @@ ecma_delete_fast_array_properties (ecma_object_t *object_p, /**< fast access mod
     const uint32_t new_aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (new_length);
 
     ecma_value_t *new_values_p;
-    new_values_p = (ecma_value_t *) jmem_heap_realloc_block (values_p,
-                                                             old_aligned_length * sizeof (ecma_value_t),
-                                                             new_aligned_length * sizeof (ecma_value_t));
+    new_values_p = (ecma_value_t *) jmem_heap_realloc (values_p,
+                                                       old_aligned_length * sizeof (ecma_value_t),
+                                                       new_aligned_length * sizeof (ecma_value_t));
 
     for (uint32_t i = new_length; i < new_aligned_length; i++)
     {

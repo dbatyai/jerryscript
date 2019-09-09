@@ -1005,7 +1005,7 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
 
   if (replace_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
-    jmem_heap_free_block ((void *) replace_buf_p, replace_size);
+    jmem_heap_free ((void *) replace_buf_p, replace_size);
   }
 } /* ecma_builtin_replace_substitute */
 

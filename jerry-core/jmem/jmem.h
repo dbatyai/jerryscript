@@ -72,6 +72,15 @@ enum
 };
 
 /**
+ * Number of pool chunk lists
+ */
+#if ENABLED (JERRY_CPOINTER_32_BIT)
+#define JMEM_POOLS_COUNT 4
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+#define JMEM_POOLS_COUNT 4
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+
+/**
  * Compressed pointer representations
  *
  * 16 bit representation:
@@ -142,10 +151,16 @@ typedef struct
 void jmem_init (void);
 void jmem_finalize (void);
 
-void *jmem_heap_alloc_block (const size_t size);
-void *jmem_heap_alloc_block_null_on_error (const size_t size);
-void *jmem_heap_realloc_block (void *ptr, const size_t old_size, const size_t new_size);
-void jmem_heap_free_block (void *ptr, const size_t size);
+void *jmem_heap_alloc (const size_t size);
+void *jmem_heap_alloc_maybe_null (const size_t size);
+void *jmem_heap_alloc_const (const size_t size);
+void *jmem_heap_realloc (void *ptr, const size_t old_size, const size_t new_size);
+void jmem_heap_free (void *ptr, const size_t size);
+void jmem_heap_free_const (void *ptr, const size_t size);
+void jmem_heap_reclaim_pools (void);
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+void jmem_heap_defragment (void);
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 
 #if ENABLED (JERRY_MEM_STATS)
 /**
@@ -202,7 +217,7 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
 #define JMEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = (type *) (jmem_heap_alloc_block (var_name ## ___size));
+  type *var_name = (type *) ((var_name ## ___size > 0) ? jmem_heap_alloc (var_name ## ___size) : NULL);
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,
@@ -213,7 +228,7 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
   { \
     JERRY_ASSERT (var_name ## ___size != 0); \
     \
-    jmem_heap_free_block (var_name, var_name ## ___size); \
+    jmem_heap_free (var_name, var_name ## ___size); \
   } \
   else \
   { \
@@ -296,20 +311,5 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
   (cp_value) = (cp_value | JMEM_SECOND_TAG_BIT_MASK) /**< set second tag bit **/
 #define JMEM_CP_SET_THIRD_BIT_TO_POINTER_TAG(cp_value) \
   (cp_value) = (cp_value | JMEM_THIRD_TAG_BIT_MASK) /**< set third tag bit **/
-
-/**
- * @}
- * \addtogroup poolman Memory pool manager
- * @{
- */
-
-void *jmem_pools_alloc (size_t size);
-void jmem_pools_free (void *chunk_p, size_t size);
-void jmem_pools_collect_empty (void);
-
-/**
- * @}
- * @}
- */
 
 #endif /* !JMEM_H */

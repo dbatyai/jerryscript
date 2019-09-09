@@ -130,11 +130,8 @@ struct jerry_context_t
   const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
   jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
-  jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
-  jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
-#if ENABLED (JERRY_CPOINTER_32_BIT)
-  jmem_pools_chunk_t *jmem_free_16_byte_chunk_p; /**< list of free sixteen byte pool chunks */
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+  const jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
+  jmem_pools_chunk_t *jmem_free_chunk_lists[JMEM_POOLS_COUNT]; /**< Lists of free pool chunks. */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
@@ -157,8 +154,8 @@ struct jerry_context_t
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */
-  size_t jmem_heap_limit; /**< current limit of heap usage, that is upon being reached,
-                           *   causes call of "try give memory back" callbacks */
+  size_t jmem_gc_limit; /**< current limit of heap usage, that is upon being reached,
+                         *   causes call of "try give memory back" callbacks */
   ecma_value_t error_value; /**< currently thrown error value */
   uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   uint32_t jerry_init_flags; /**< run-time configuration flags */

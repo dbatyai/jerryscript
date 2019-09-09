@@ -72,26 +72,16 @@ JERRY_STATIC_ASSERT (ECMA_PROPERTY_TYPE_DELETED == (ECMA_DIRECT_STRING_MAGIC << 
  */
 ecma_object_t *
 ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe of the object (or NULL) */
-                    size_t ext_object_size, /**< size of extended objects */
+                    const size_t object_size, /**< size of the object */
                     ecma_object_type_t type) /**< object type */
 {
-  ecma_object_t *new_object_p;
-
-  if (ext_object_size > 0)
-  {
-    new_object_p = (ecma_object_t *) ecma_alloc_extended_object (ext_object_size);
-  }
-  else
-  {
-    new_object_p = ecma_alloc_object ();
-  }
+  ecma_object_t *new_object_p = ecma_alloc_object (object_size);
 
   new_object_p->type_flags_refs = (uint16_t) (type | ECMA_OBJECT_FLAG_EXTENSIBLE);
 
   ecma_init_gc_info (new_object_p);
 
   new_object_p->u1.property_list_cp = JMEM_CP_NULL;
-
   ECMA_SET_POINTER (new_object_p->u2.prototype_cp, prototype_object_p);
 
   return new_object_p;
@@ -110,7 +100,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
 ecma_object_t *
 ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer lexical environment */
 {
-  ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
+  ecma_object_t *new_lexical_environment_p = ecma_alloc_object (sizeof (ecma_object_t));
 
   uint16_t type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
   new_lexical_environment_p->type_flags_refs = type;
@@ -149,7 +139,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
 
-  ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
+  ecma_object_t *new_lexical_environment_p = ecma_alloc_object (sizeof (ecma_object_t));
 
   new_lexical_environment_p->type_flags_refs = (uint16_t) (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | type);
 
@@ -558,7 +548,7 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   ecma_property_value_t value;
 #if ENABLED (JERRY_CPOINTER_32_BIT)
   ecma_getter_setter_pointers_t *getter_setter_pair_p;
-  getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
+  getter_setter_pair_p = jmem_heap_alloc_const (sizeof (ecma_getter_setter_pointers_t));
   ECMA_SET_POINTER (getter_setter_pair_p->getter_cp, get_p);
   ECMA_SET_POINTER (getter_setter_pair_p->setter_cp, set_p);
   ECMA_SET_NON_NULL_POINTER (value.getter_setter_pair_cp, getter_setter_pair_p);
@@ -774,7 +764,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
                                                         ECMA_PROPERTY_VALUE_PTR (property_p)->getter_setter_pair_cp);
-      jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
+      jmem_heap_free_const (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
       break;
     }
@@ -1214,7 +1204,7 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 } /* ecma_free_property_descriptor */
 
 /**
- * The size of error reference must be 8 bytes to use jmem_pools_alloc().
+ * The size of error reference must be 8 bytes to use jmem_heap_alloc_block().
  */
 JERRY_STATIC_ASSERT (sizeof (ecma_error_reference_t) == 8,
                      ecma_error_reference_size_must_be_8_bytes);
@@ -1231,7 +1221,7 @@ ecma_value_t
 ecma_create_error_reference (ecma_value_t value, /**< referenced value */
                              bool is_exception) /**< error reference is an exception */
 {
-  ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
+  ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_heap_alloc_const (sizeof (ecma_error_reference_t));
 
   error_ref_p->refs_and_flags = ECMA_ERROR_REF_ONE | (is_exception ? 0 : ECMA_ERROR_REF_ABORT);
   error_ref_p->value = value;
@@ -1298,7 +1288,7 @@ ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error refe
   if (error_ref_p->refs_and_flags < ECMA_ERROR_REF_ONE)
   {
     ecma_free_value (error_ref_p->value);
-    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+    jmem_heap_free_const (error_ref_p, sizeof (ecma_error_reference_t));
   }
 } /* ecma_deref_error_reference */
 
@@ -1327,7 +1317,7 @@ ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference 
   }
   else
   {
-    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+    jmem_heap_free_const (error_ref_p, sizeof (ecma_error_reference_t));
   }
 
   JERRY_CONTEXT (error_value) = referenced_value;
@@ -1468,8 +1458,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
   }
 
-  jmem_heap_free_block (bytecode_p,
-                        ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
+  jmem_heap_free (bytecode_p, ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
 
 #if ENABLED (JERRY_ES2015)

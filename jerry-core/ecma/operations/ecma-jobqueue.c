@@ -70,7 +70,7 @@ ecma_create_promise_reaction_job (ecma_value_t reaction, /**< PromiseReaction */
   JERRY_ASSERT (ecma_is_value_object (reaction));
 
   ecma_job_promise_reaction_t *job_p;
-  job_p = (ecma_job_promise_reaction_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_reaction_t));
+  job_p = (ecma_job_promise_reaction_t *) jmem_heap_alloc_const (sizeof (ecma_job_promise_reaction_t));
   job_p->reaction = ecma_copy_value (reaction);
   job_p->argument = ecma_copy_value (argument);
 
@@ -88,7 +88,7 @@ ecma_free_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< points 
   ecma_free_value (job_p->reaction);
   ecma_free_value (job_p->argument);
 
-  jmem_heap_free_block (job_p, sizeof (ecma_job_promise_reaction_t));
+  jmem_heap_free_const (job_p, sizeof (ecma_job_promise_reaction_t));
 } /* ecma_free_promise_reaction_job */
 
 /**
@@ -106,7 +106,7 @@ ecma_create_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to 
   JERRY_ASSERT (ecma_op_is_callable (then));
 
   ecma_job_promise_resolve_thenable_t *job_p;
-  job_p = (ecma_job_promise_resolve_thenable_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_resolve_thenable_t));
+  job_p = (ecma_job_promise_resolve_thenable_t *) jmem_heap_alloc_const (sizeof (ecma_job_promise_resolve_thenable_t));
 
   job_p->promise = ecma_copy_value (promise);
   job_p->thenable = ecma_copy_value (thenable);
@@ -128,7 +128,7 @@ ecma_free_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job
   ecma_free_value (job_p->thenable);
   ecma_free_value (job_p->then);
 
-  jmem_heap_free_block (job_p, sizeof (ecma_job_promise_resolve_thenable_t));
+  jmem_heap_free_const (job_p, sizeof (ecma_job_promise_resolve_thenable_t));
 } /* ecma_free_promise_resolve_thenable_job */
 
 /**
@@ -276,7 +276,7 @@ static void
 ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
                   void *job_p) /**< the job */
 {
-  ecma_job_queueitem_t *item_p = jmem_heap_alloc_block (sizeof (ecma_job_queueitem_t));
+  ecma_job_queueitem_t *item_p = jmem_heap_alloc_const (sizeof (ecma_job_queueitem_t));
   item_p->job_p = job_p;
   item_p->handler = handler;
   item_p->next_p = NULL;
@@ -337,7 +337,7 @@ ecma_process_all_enqueued_jobs (void)
 
     void *job_p = item_p->job_p;
     ecma_job_handler_t handler = item_p->handler;
-    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+    jmem_heap_free_const (item_p, sizeof (ecma_job_queueitem_t));
 
     ecma_free_value (ret);
     ret = handler (job_p);
@@ -357,7 +357,7 @@ ecma_free_all_enqueued_jobs (void)
     ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
     JERRY_CONTEXT (job_queue_head_p) = item_p->next_p;
     void *job_p = item_p->job_p;
-    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+    jmem_heap_free_const (item_p, sizeof (ecma_job_queueitem_t));
 
     ecma_free_promise_reaction_job (job_p);
   }

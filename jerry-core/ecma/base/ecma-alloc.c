@@ -54,7 +54,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <=
 ecma_number_t *
 ecma_alloc_number (void)
 {
-  return (ecma_number_t *) jmem_pools_alloc (sizeof (ecma_number_t));
+  return (ecma_number_t *) jmem_heap_alloc_const (sizeof (ecma_number_t));
 } /* ecma_alloc_number */
 
 /**
@@ -63,7 +63,7 @@ ecma_alloc_number (void)
 void
 ecma_dealloc_number (ecma_number_t *number_p) /**< number to be freed */
 {
-  jmem_pools_free ((uint8_t *) number_p, sizeof (ecma_number_t));
+  jmem_heap_free_const ((uint8_t *) number_p, sizeof (ecma_number_t));
 } /* ecma_dealloc_number */
 
 /**
@@ -72,56 +72,28 @@ ecma_dealloc_number (ecma_number_t *number_p) /**< number to be freed */
  * @return pointer to allocated memory
  */
 inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
-ecma_alloc_object (void)
+ecma_alloc_object (const size_t size) /**< object size */
 {
 #if ENABLED (JERRY_MEM_STATS)
-  jmem_stats_allocate_object_bytes (sizeof (ecma_object_t));
+  jmem_stats_allocate_object_bytes (size);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  return (ecma_object_t *) jmem_pools_alloc (sizeof (ecma_object_t));
+  return (ecma_object_t *) jmem_heap_alloc_const (size);
 } /* ecma_alloc_object */
 
 /**
  * Dealloc memory from an ecma-object
  */
 inline void JERRY_ATTR_ALWAYS_INLINE
-ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
-{
-#if ENABLED (JERRY_MEM_STATS)
-  jmem_stats_free_object_bytes (sizeof (ecma_object_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
-
-  jmem_pools_free (object_p, sizeof (ecma_object_t));
-} /* ecma_dealloc_object */
-
-/**
- * Allocate memory for extended object
- *
- * @return pointer to allocated memory
- */
-inline ecma_extended_object_t * JERRY_ATTR_ALWAYS_INLINE
-ecma_alloc_extended_object (size_t size) /**< size of object */
-{
-#if ENABLED (JERRY_MEM_STATS)
-  jmem_stats_allocate_object_bytes (size);
-#endif /* ENABLED (JERRY_MEM_STATS) */
-
-  return jmem_heap_alloc_block (size);
-} /* ecma_alloc_extended_object */
-
-/**
- * Dealloc memory of an extended object
- */
-inline void JERRY_ATTR_ALWAYS_INLINE
-ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
-                              size_t size) /**< size of object */
+ecma_dealloc_object (ecma_object_t *object_p, /**< object to be freed */
+                     const size_t size) /**< object size */
 {
 #if ENABLED (JERRY_MEM_STATS)
   jmem_stats_free_object_bytes (size);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  jmem_heap_free_block (object_p, size);
-} /* ecma_dealloc_extended_object */
+  jmem_heap_free_const (object_p, size);
+} /* ecma_dealloc_object */
 
 /**
  * Allocate memory for ecma-string descriptor
@@ -135,7 +107,7 @@ ecma_alloc_string (void)
   jmem_stats_allocate_string_bytes (sizeof (ecma_string_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  return (ecma_string_t *) jmem_pools_alloc (sizeof (ecma_string_t));
+  return (ecma_string_t *) jmem_heap_alloc_const (sizeof (ecma_string_t));
 } /* ecma_alloc_string */
 
 /**
@@ -148,7 +120,7 @@ ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
   jmem_stats_free_string_bytes (sizeof (ecma_string_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  jmem_pools_free (string_p, sizeof (ecma_string_t));
+  jmem_heap_free_const (string_p, sizeof (ecma_string_t));
 } /* ecma_dealloc_string */
 
 /**
@@ -163,7 +135,7 @@ ecma_alloc_extended_string (void)
   jmem_stats_allocate_string_bytes (sizeof (ecma_extended_string_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  return (ecma_extended_string_t *) jmem_heap_alloc_block (sizeof (ecma_extended_string_t));
+  return (ecma_extended_string_t *) jmem_heap_alloc_const (sizeof (ecma_extended_string_t));
 } /* ecma_alloc_extended_string */
 
 /**
@@ -176,7 +148,7 @@ ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extende
   jmem_stats_free_string_bytes (sizeof (ecma_extended_string_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  jmem_heap_free_block (ext_string_p, sizeof (ecma_extended_string_t));
+  jmem_heap_free_const (ext_string_p, sizeof (ecma_extended_string_t));
 } /* ecma_dealloc_extended_string */
 
 /**
@@ -191,7 +163,7 @@ ecma_alloc_string_buffer (size_t size) /**< size of string */
   jmem_stats_allocate_string_bytes (size);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  return jmem_heap_alloc_block (size);
+  return jmem_heap_alloc (size);
 } /* ecma_alloc_string_buffer */
 
 /**
@@ -205,7 +177,7 @@ ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
   jmem_stats_free_string_bytes (size);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  jmem_heap_free_block (string_p, size);
+  jmem_heap_free (string_p, size);
 } /* ecma_dealloc_string_buffer */
 
 /**
@@ -220,7 +192,7 @@ ecma_alloc_property_pair (void)
   jmem_stats_allocate_property_bytes (sizeof (ecma_property_pair_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  return jmem_heap_alloc_block (sizeof (ecma_property_pair_t));
+  return jmem_heap_alloc_const (sizeof (ecma_property_pair_t));
 } /* ecma_alloc_property_pair */
 
 /**
@@ -233,7 +205,7 @@ ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property
   jmem_stats_free_property_bytes (sizeof (ecma_property_pair_t));
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
-  jmem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));
+  jmem_heap_free_const (property_pair_p, sizeof (ecma_property_pair_t));
 } /* ecma_dealloc_property_pair */
 
 /**

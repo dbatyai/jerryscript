@@ -119,7 +119,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
   size_t total_size = ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (max_property_count);
 
-  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) jmem_heap_alloc_block_null_on_error (total_size);
+  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) jmem_heap_alloc_maybe_null (total_size);
 
   if (hashmap_p == NULL)
   {
@@ -210,7 +210,7 @@ ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
 
   object_p->u1.property_list_cp = property_p->next_property_cp;
 
-  jmem_heap_free_block (hashmap_p,
+  jmem_heap_free (hashmap_p,
                         ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (hashmap_p->max_property_count));
 } /* ecma_property_hashmap_free */
 

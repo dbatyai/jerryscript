@@ -29,9 +29,9 @@ main (void)
   ecma_init ();
 
   {
-    uint8_t *block1_p = (uint8_t *) jmem_heap_alloc_block (BASIC_SIZE);
-    uint8_t *block2_p = (uint8_t *) jmem_heap_alloc_block (BASIC_SIZE);
-    uint8_t *block3_p = (uint8_t *) jmem_heap_alloc_block (BASIC_SIZE);
+    uint8_t *block1_p = (uint8_t *) jmem_heap_alloc (BASIC_SIZE);
+    uint8_t *block2_p = (uint8_t *) jmem_heap_alloc (BASIC_SIZE);
+    uint8_t *block3_p = (uint8_t *) jmem_heap_alloc (BASIC_SIZE);
 
     /* [block1 64] [block2 64] [block3 64] [...] */
 
@@ -41,7 +41,8 @@ main (void)
     }
 
     /* Realloc by moving */
-    block2_p = jmem_heap_realloc_block (block2_p, BASIC_SIZE, BASIC_SIZE * 2);
+    block2_p = jmem_heap_realloc (block2_p, BASIC_SIZE, BASIC_SIZE * 2);
+    jmem_heap_reclaim_pools();
 
     /* [block1 64] [free 64] [block3 64] [block2 128] [...] */
 
@@ -55,16 +56,18 @@ main (void)
       block2_p[i] = i;
     }
 
-    uint8_t *block4_p = (uint8_t *) jmem_heap_alloc_block (BASIC_SIZE * 2);
+    uint8_t *block4_p = (uint8_t *) jmem_heap_alloc (BASIC_SIZE * 2);
 
     /* [block1 64] [free 64] [block3 64] [block2 128] [block4 128] [...] */
 
-    jmem_heap_free_block (block3_p, BASIC_SIZE);
+    jmem_heap_free (block3_p, BASIC_SIZE);
+    jmem_heap_reclaim_pools();
 
     /* [block1 64] [free 128] [block2 128] [block4 128] [...] */
 
     /* Realloc by extending front */
-    block2_p = (uint8_t *) jmem_heap_realloc_block (block2_p, BASIC_SIZE * 2, BASIC_SIZE * 3);
+    block2_p = (uint8_t *) jmem_heap_realloc (block2_p, BASIC_SIZE * 2, BASIC_SIZE * 3);
+    jmem_heap_reclaim_pools();
 
     /* [block1 64] [free 64] [block2 192] [block4 128] [...] */
 
@@ -74,7 +77,8 @@ main (void)
     }
 
     /* Shrink */
-    block2_p = (uint8_t *) jmem_heap_realloc_block (block2_p, BASIC_SIZE * 3, BASIC_SIZE);
+    block2_p = (uint8_t *) jmem_heap_realloc (block2_p, BASIC_SIZE * 3, BASIC_SIZE);
+    jmem_heap_reclaim_pools();
 
     /* [block1 64] [free 64] [block2 64] [free 128] [block4 128] [...] */
 
@@ -89,7 +93,8 @@ main (void)
     }
 
     /* Grow in place */
-    block1_p = (uint8_t *) jmem_heap_realloc_block (block1_p, BASIC_SIZE, BASIC_SIZE * 2);
+    block1_p = (uint8_t *) jmem_heap_realloc (block1_p, BASIC_SIZE, BASIC_SIZE * 2);
+    jmem_heap_reclaim_pools();
 
     /* [block1 128] [block2 64] [free 128] [block4 128] [...] */
 
@@ -98,9 +103,9 @@ main (void)
       TEST_ASSERT (block1_p[i] == i);
     }
 
-    jmem_heap_free_block (block1_p, BASIC_SIZE * 2);
-    jmem_heap_free_block (block2_p, BASIC_SIZE);
-    jmem_heap_free_block (block4_p, BASIC_SIZE * 2);
+    jmem_heap_free (block1_p, BASIC_SIZE * 2);
+    jmem_heap_free (block2_p, BASIC_SIZE);
+    jmem_heap_free (block4_p, BASIC_SIZE * 2);
   }
 
   ecma_finalize ();
