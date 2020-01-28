@@ -725,8 +725,8 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
         break;
       }
 
-      lit_code_point_t cp;
-      lit_read_code_point_from_utf8 (octets, bytes_count, &cp);
+      const lit_utf8_byte_t *code_point_buffer_p = octets;
+      lit_code_point_t cp = lit_utf8_read_code_point (&code_point_buffer_p);
 
       if (lit_is_code_point_utf16_high_surrogate (cp)
           || lit_is_code_point_utf16_low_surrogate (cp))
@@ -786,8 +786,8 @@ ecma_builtin_global_object_byte_to_hex (lit_utf8_byte_t *dest_p, /**< destinatio
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /**< routine's first argument's
-                                                                               *   string buffer */
+ecma_builtin_global_object_encode_uri_helper (const lit_utf8_byte_t *input_start_p, /**< routine's first argument's
+                                                                                     *   string buffer */
                                               lit_utf8_size_t input_size, /**< routine's first argument's
                                                                            *   string buffer's size */
                                               const uint8_t *unescaped_uri_bitset_p) /**< unescaped bitset */
@@ -797,7 +797,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
    * and compute the length of the output, then we encode the input.
    */
 
-  lit_utf8_byte_t *input_char_p = input_start_p;
+  const lit_utf8_byte_t *input_char_p = input_start_p;
   const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
   lit_utf8_size_t output_length = 0;
   lit_code_point_t cp;
@@ -808,7 +808,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
   while (input_char_p < input_end_p)
   {
     /* Input validation, we need to reject stray surrogates. */
-    input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
+    ch = lit_cesu8_read_next (&input_char_p);
 
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
@@ -824,13 +824,12 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
         return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
       }
 
-      ecma_char_t next_ch;
-      lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
+      ecma_char_t next_ch = lit_cesu8_peek_next (input_char_p);
 
       if (lit_is_code_point_utf16_low_surrogate (next_ch))
       {
         cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
-        input_char_p += read_size;
+        lit_utf8_incr (&input_char_p);
       }
       else
       {
@@ -869,18 +868,16 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
   while (input_char_p < input_end_p)
   {
     /* Input decode. */
-    input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
-    cp = ch;
+    cp = lit_cesu8_read_next (&input_char_p);
 
-    if (lit_is_code_point_utf16_high_surrogate (ch))
+    if (lit_is_code_point_utf16_high_surrogate (cp))
     {
-      ecma_char_t next_ch;
-      lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
+      const ecma_char_t next_ch = lit_cesu8_peek_next (input_char_p);
 
       if (lit_is_code_point_utf16_low_surrogate (next_ch))
       {
-        cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
-        input_char_p += read_size;
+        cp = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) cp, next_ch);
+        lit_utf8_incr (&input_char_p);
       }
     }
 

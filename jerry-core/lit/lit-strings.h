@@ -107,7 +107,7 @@ lit_string_hash_t lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, co
 /* code unit access */
 ecma_char_t lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t utf8_buf_size,
                                           ecma_length_t code_unit_offset);
-lit_utf8_size_t lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byte_t first_byte);
+lit_utf8_size_t lit_utf8_get_encoded_size (const lit_utf8_byte_t first_byte);
 
 /* conversion */
 lit_utf8_size_t lit_code_unit_to_utf8 (ecma_char_t code_unit, lit_utf8_byte_t *buf_p);
@@ -125,14 +125,10 @@ bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, lit_
 uint8_t lit_utf16_encode_code_point (lit_code_point_t cp, ecma_char_t *cu_p);
 
 /* read code point from buffer */
-lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, lit_utf8_size_t buf_size,
-                                               lit_code_point_t *code_point);
-
-lit_utf8_size_t lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
-                                              ecma_char_t *code_point);
-
-lit_utf8_size_t lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
-                                                   ecma_char_t *code_point);
+lit_code_point_t lit_utf8_read_code_point (const lit_utf8_byte_t **buf_p);
+lit_code_point_t lit_utf8_read_code_point_size (const lit_utf8_byte_t *buf_p, lit_utf8_size_t *size_p);
+ecma_char_t lit_utf8_read_code_unit (const lit_utf8_byte_t **buf_p);
+ecma_char_t lit_utf8_read_code_unit_size (const lit_utf8_byte_t *buf_p, lit_utf8_size_t *size_p);
 
 ecma_char_t lit_cesu8_read_next (const lit_utf8_byte_t **buf_p);
 ecma_char_t lit_cesu8_read_prev (const lit_utf8_byte_t **buf_p);

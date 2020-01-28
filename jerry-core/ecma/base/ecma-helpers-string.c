@@ -1168,14 +1168,14 @@ ecma_substring_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p, /**< ec
     end_pos -= start_pos;
     while (start_pos--)
     {
-      start_p += lit_get_unicode_char_size_by_utf8_first_byte (*start_p);
+      start_p += lit_utf8_get_encoded_size (*start_p);
     }
 
     const lit_utf8_byte_t *end_p = start_p;
 
     while (end_pos--)
     {
-      lit_utf8_size_t code_unit_size = lit_get_unicode_char_size_by_utf8_first_byte (*end_p);
+      lit_utf8_size_t code_unit_size = lit_utf8_get_encoded_size (*end_p);
 
       if ((size + code_unit_size) > buffer_size)
       {
@@ -1250,18 +1250,15 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
 
     while (start_pos--)
     {
-      ecma_char_t ch;
-      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &ch);
+      const ecma_char_t ch = lit_cesu8_read_next (&cesu8_str_p);
 
-      cesu8_str_p += code_unit_size;
       if ((cesu8_str_p != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
       {
-        ecma_char_t next_ch;
-        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &next_ch);
+        const ecma_char_t next_ch = lit_cesu8_peek_next (cesu8_str_p);
+
         if (lit_is_code_point_utf16_low_surrogate (next_ch))
         {
-          JERRY_ASSERT (code_unit_size == next_ch_size);
-          cesu8_str_p += code_unit_size;
+          lit_utf8_incr (&cesu8_str_p);
         }
       }
     }
@@ -1273,33 +1270,30 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
 
     while (end_pos--)
     {
-      ecma_char_t ch;
-      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_pos, &ch);
+      lit_utf8_size_t code_unit_size;
+      const ecma_char_t ch = lit_utf8_read_code_unit_size (cesu8_pos, &code_unit_size);
 
       if ((size + code_unit_size) > buffer_size)
       {
         break;
       }
 
-      if (((cesu8_pos + code_unit_size) != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
+      if ((cesu8_pos != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
       {
-        ecma_char_t next_ch;
-        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_pos + code_unit_size, &next_ch);
+        const ecma_char_t next_ch = lit_cesu8_peek_next (cesu8_pos);
 
         if (lit_is_code_point_utf16_low_surrogate (next_ch))
         {
-          JERRY_ASSERT (code_unit_size == next_ch_size);
-
-          if ((size + code_unit_size + 1) > buffer_size)
+          if ((size + LIT_UTF8_MAX_BYTES_IN_CODE_POINT) > buffer_size)
           {
             break;
           }
 
-          cesu8_pos += next_ch_size;
+          cesu8_pos += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
 
-          lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
+          const lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
           lit_code_point_to_utf8 (code_point, utf8_pos);
-          size += (code_unit_size + 1);
+          size += LIT_UTF8_MAX_BYTES_IN_CODE_POINT;
         }
         else
         {
@@ -1313,8 +1307,8 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
         size += code_unit_size;
       }
 
-      utf8_pos = buffer_p + size;
       cesu8_pos += code_unit_size;
+      utf8_pos = buffer_p + size;
     }
 
     JERRY_ASSERT (utf8_pos <= utf8_end_pos);
@@ -2407,13 +2401,13 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
   {
     while (start_pos--)
     {
-      start_p += lit_get_unicode_char_size_by_utf8_first_byte (*start_p);
+      start_p += lit_utf8_get_encoded_size (*start_p);
     }
 
     const lit_utf8_byte_t *end_p = start_p;
     while (end_pos--)
     {
-      end_p += lit_get_unicode_char_size_by_utf8_first_byte (*end_p);
+      end_p += lit_utf8_get_encoded_size (*end_p);
     }
 
     ecma_string_p = ecma_new_ecma_string_from_utf8 (start_p, (lit_utf8_size_t) (end_p - start_p));
@@ -2438,13 +2432,12 @@ ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] curr
                          lit_utf8_size_t *utf8_str_size) /**< [in, out] size of the given string */
 {
   ecma_char_t ch;
-  lit_utf8_size_t read_size;
   const lit_utf8_byte_t *nonws_start_p = *utf8_str_p + *utf8_str_size;
   const lit_utf8_byte_t *current_p = *utf8_str_p;
 
   while (current_p < nonws_start_p)
   {
-    read_size = lit_read_code_unit_from_utf8 (current_p, &ch);
+    ch = lit_cesu8_peek_next (current_p);
 
     if (!lit_char_is_white_space (ch)
         && !lit_char_is_line_terminator (ch))
@@ -2453,14 +2446,14 @@ ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] curr
       break;
     }
 
-    current_p += read_size;
+    lit_utf8_incr (&current_p);
   }
 
   current_p = *utf8_str_p + *utf8_str_size;
 
   while (current_p > nonws_start_p)
   {
-    read_size = lit_read_prev_code_unit_from_utf8 (current_p, &ch);
+    ch = lit_cesu8_peek_prev (current_p);
 
     if (!lit_char_is_white_space (ch)
         && !lit_char_is_line_terminator (ch))
@@ -2468,7 +2461,7 @@ ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] curr
       break;
     }
 
-    current_p -= read_size;
+    lit_utf8_decr (&current_p);
   }
 
   *utf8_str_p = nonws_start_p;

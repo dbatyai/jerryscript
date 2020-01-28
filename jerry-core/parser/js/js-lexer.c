@@ -694,19 +694,14 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
     if (JERRY_UNLIKELY (code_point >= LIT_UTF8_2_BYTE_MARKER))
     {
 #if ENABLED (JERRY_ES2015)
-      utf8_length = lit_read_code_point_from_utf8 (source_p,
-                                                   (lit_utf8_size_t) (source_end_p - source_p),
-                                                   &code_point);
+      code_point = lit_utf8_read_code_point_size (source_p, &utf8_length);
       decoded_length = utf8_length;
 
       /* Only ES2015 supports code points outside of the basic plane which can be part of an identifier. */
       if ((code_point >= LIT_UTF16_HIGH_SURROGATE_MIN && code_point <= LIT_UTF16_HIGH_SURROGATE_MAX)
           && source_p + 3 < source_end_p)
       {
-        lit_code_point_t low_surrogate;
-        lit_read_code_point_from_utf8 (source_p + 3,
-                                       (lit_utf8_size_t) (source_end_p - (source_p + 3)),
-                                       &low_surrogate);
+        lit_code_point_t low_surrogate = lit_utf8_read_code_point_size (source_p + 3, &utf8_length);
 
         if (low_surrogate >= LIT_UTF16_LOW_SURROGATE_MIN && low_surrogate <= LIT_UTF16_LOW_SURROGATE_MAX)
         {
@@ -725,9 +720,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 #else /* !ENABLED (JERRY_ES2015) */
       if (code_point < LIT_UTF8_4_BYTE_MARKER)
       {
-        utf8_length = lit_read_code_point_from_utf8 (source_p,
-                                                     (lit_utf8_size_t) (source_end_p - source_p),
-                                                     &code_point);
+        code_point = lit_utf8_read_code_point_size (source_p, &utf8_length);
         decoded_length = utf8_length;
       }
       else
