@@ -229,9 +229,6 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO)
-  VM_OC_LINE,                    /**< line number of the next statement */
-#endif /* ENABLED (JERRY_LINE_INFO) */
 #if ENABLED (JERRY_ESNEXT)
   VM_OC_CHECK_VAR,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET,               /**< check redeclared lets in the global scope */
@@ -296,9 +293,6 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
 #endif /* !ENABLED (JERRY_DEBUGGER) */
-#if !ENABLED (JERRY_LINE_INFO)
-  VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
-#endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ESNEXT)
   VM_OC_EXT_VAR_EVAL = VM_OC_NONE,            /**< variable and function evaluation for
                                                *   functions with separate argument context */

@@ -500,6 +500,11 @@ typedef struct parser_saved_context_t
   ecma_value_t tagged_template_literal_cp;    /**< compessed pointer to the tagged template literal collection */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_LINE_INFO)
+  parser_line_counter_t start_line;           /**< start line number */
+  parser_line_counter_t start_column;         /**< start column number */
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
 #ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
 #endif /* !JERRY_NDEBUG */
@@ -594,7 +599,8 @@ typedef struct
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
 #if ENABLED (JERRY_LINE_INFO)
-  parser_line_counter_t last_line_info_line;  /**< last line where line info has been inserted */
+  parser_line_counter_t start_line;           /**< starting line */
+  parser_line_counter_t start_column;         /**< starting column */
 #endif /* ENABLED (JERRY_LINE_INFO) */
 } parser_context_t;
 

@@ -631,11 +631,6 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-    /* resource name */
-    extra_bytes += (uint32_t) sizeof (ecma_value_t);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
     new_code_size = JERRY_ALIGNUP (new_code_size + extra_bytes, JMEM_ALIGNMENT);
 
     bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (new_code_size);

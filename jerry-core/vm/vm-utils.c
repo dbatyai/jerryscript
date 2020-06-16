@@ -90,7 +90,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
       ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
     }
 
-    ecma_string_t *line_str_p = ecma_new_ecma_string_from_uint32 (context_p->current_line);
+    ecma_string_t *line_str_p = ecma_new_ecma_string_from_uint32 (/*TODO*/ 0);
     ecma_stringbuilder_append (&builder, line_str_p);
     ecma_deref_ecma_string (line_str_p);
 

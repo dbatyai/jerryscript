@@ -99,10 +99,10 @@ typedef enum
  */
 typedef struct
 {
-  ecma_compiled_code_t header;       /**< compiled code header */
-  uint32_t captures_count;           /**< number of capturing groups */
-  uint32_t non_captures_count;       /**< number of non-capturing groups */
-  ecma_value_t source;               /**< original RegExp pattern */
+  ecma_compiled_code_t header;              /**< compiled code header */
+  uint32_t captures_count;                  /**< number of capturing groups */
+  uint32_t non_captures_count;              /**< number of non-capturing groups */
+  ecma_value_t source;                      /**< original RegExp pattern */
 } re_compiled_code_t;
 
 void re_initialize_regexp_bytecode (re_compiler_ctx_t *re_ctx_p);

@@ -2591,6 +2591,10 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
 
   parser_push_result (context_p);
 
+#if ENABLED (JERRY_LINE_INFO)
+   parser_emit_line_info (context_p, context_p->token.line, false);
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
   if (context_p->token.type == LEXER_ASSIGN)
   {
     parser_append_binary_single_assignment_token (context_p, 0);
@@ -2999,10 +3003,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_LINE_INFO)
-  if (ident_line_counter != context_p->last_line_info_line)
-  {
-    parser_emit_line_info (context_p, ident_line_counter, false);
-  }
+  parser_emit_line_info (context_p, ident_line_counter, false);
 #endif /* ENABLED (JERRY_LINE_INFO) */
 } /* parser_pattern_form_assignment */
 

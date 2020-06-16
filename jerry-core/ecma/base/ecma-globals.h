@@ -960,7 +960,7 @@ typedef struct
   (uint32_t) ((((length)) + ECMA_FAST_ARRAY_ALIGNMENT - 1) / ECMA_FAST_ARRAY_ALIGNMENT * ECMA_FAST_ARRAY_ALIGNMENT)
 
 /**
- * Compiled byte code data.
+ * Compiled code heaader.
  */
 typedef struct
 {

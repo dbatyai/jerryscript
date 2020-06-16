@@ -25,9 +25,9 @@ JERRY_STATIC_ASSERT ((sizeof (cbc_uint16_arguments_t) % sizeof (jmem_cpointer_t)
  * The reason of these two static asserts to notify the developer to increase the JERRY_SNAPSHOT_VERSION
  * whenever new bytecodes are introduced or existing ones have been deleted.
  */
-JERRY_STATIC_ASSERT (CBC_END == 238,
+JERRY_STATIC_ASSERT (CBC_END == 239,
                      number_of_cbc_opcodes_changed);
-JERRY_STATIC_ASSERT (CBC_EXT_END == 121,
+JERRY_STATIC_ASSERT (CBC_EXT_END == 120,
                      number_of_cbc_ext_opcodes_changed);
 
 #if ENABLED (JERRY_PARSER)

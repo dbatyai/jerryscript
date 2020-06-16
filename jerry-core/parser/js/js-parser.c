@@ -17,6 +17,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
+#include "ecma-line-info.h"
 #include "ecma-module.h"
 #include "jcontext.h"
 #include "js-parser-internal.h"
@@ -768,24 +769,6 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       flags = cbc_ext_flags[ext_opcode];
       JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
       byte_code_p += 2;
-
-#if ENABLED (JERRY_LINE_INFO)
-      if (ext_opcode == CBC_EXT_LINE)
-      {
-        uint32_t value = 0;
-        uint8_t byte;
-
-        do
-        {
-          byte = *byte_code_p++;
-          value = (value << 7) | (byte & CBC_LOWER_SEVEN_BIT_MASK);
-        }
-        while (byte & CBC_HIGHEST_BIT_MASK);
-
-        JERRY_DEBUG_MSG (" %d\n", (int) value);
-        continue;
-      }
-#endif /* ENABLED (JERRY_LINE_INFO) */
     }
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
@@ -958,6 +941,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   ecma_value_t *literal_pool_p;
   uint8_t *dst_p;
 
+printf("start line info: %u %u\n", context_p->start_line, context_p->start_column);
+
 #if ENABLED (JERRY_ESNEXT)
   if ((context_p->status_flags & (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
       == (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
@@ -1067,7 +1052,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     PARSER_NEXT_BYTE (page_p, offset);
     branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (last_opcode);
     flags = cbc_flags[last_opcode];
-    length++;
 
     if (last_opcode == CBC_EXT_OPCODE)
     {
@@ -1078,24 +1062,32 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       flags = cbc_ext_flags[ext_opcode];
       PARSER_NEXT_BYTE (page_p, offset);
       length++;
-
-#if ENABLED (JERRY_LINE_INFO)
-      if (ext_opcode == CBC_EXT_LINE)
-      {
-        uint8_t last_byte = 0;
-
-        do
-        {
-          last_byte = page_p->bytes[offset];
-          PARSER_NEXT_BYTE (page_p, offset);
-          length++;
-        }
-        while (last_byte & CBC_HIGHEST_BIT_MASK);
-
-        continue;
-      }
-#endif /* ENABLED (JERRY_LINE_INFO) */
     }
+#if ENABLED (JERRY_LINE_INFO)
+    else if (last_opcode == CBC_LINE_INFO)
+    {
+      /* Line info will be removed from the bytecode stream. */
+      uint8_t last_byte;
+
+      do
+      {
+        last_byte = page_p->bytes[offset];
+        PARSER_NEXT_BYTE (page_p, offset);
+      }
+      while (last_byte & CBC_HIGHEST_BIT_MASK);
+
+      do
+      {
+        last_byte = page_p->bytes[offset];
+        PARSER_NEXT_BYTE (page_p, offset);
+      }
+      while (last_byte & CBC_HIGHEST_BIT_MASK);
+
+      continue;
+    }
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
+    length++;
 
     while (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {
@@ -1433,6 +1425,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   uint8_t last_register_index = (uint8_t) JERRY_MIN (context_p->register_count,
                                                      (PARSER_MAXIMUM_NUMBER_OF_REGISTERS - 1));
 
+#if ENABLED (JERRY_LINE_INFO)
+  ecma_line_info_encoder_t encoder;
+  ecma_line_info_initialize (&encoder, context_p->start_line, context_p->start_column);
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
   while (page_p != last_page_p || offset < last_position)
   {
     uint8_t flags;
@@ -1459,6 +1456,39 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
       continue;
     }
+#if ENABLED (JERRY_LINE_INFO)
+    else if (opcode == CBC_LINE_INFO)
+    {
+      uint32_t line = 0;
+      uint32_t column = 0;
+      uint8_t byte;
+      offset++;
+
+      do
+      {
+        byte = page_p->bytes[offset];
+        line = (line << 7) | (byte & CBC_LOWER_SEVEN_BIT_MASK);
+        PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+      }
+      while (byte & CBC_HIGHEST_BIT_MASK);
+
+      do
+      {
+        byte = page_p->bytes[offset];
+        column = (column << 7) | (byte & CBC_LOWER_SEVEN_BIT_MASK);
+        PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+      }
+      while (byte & CBC_HIGHEST_BIT_MASK);
+
+      /* If the next opcode is also a line info adjustment then the current one is omitted. */
+      if (page_p->bytes[offset] != CBC_LINE_INFO)
+      {
+        ecma_line_info_encode (&encoder, (uint32_t) (dst_p - byte_code_p), line, column);
+      }
+
+      continue;
+    }
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
     /* Storing the opcode */
     *dst_p++ = (uint8_t) opcode;
@@ -1487,25 +1517,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       opcode_p++;
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
-
-#if ENABLED (JERRY_LINE_INFO)
-      if (ext_opcode == CBC_EXT_LINE)
-      {
-        uint8_t last_byte = 0;
-
-        do
-        {
-          last_byte = page_p->bytes[offset];
-          *dst_p++ = last_byte;
-
-          real_offset++;
-          PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
-        }
-        while (last_byte & CBC_HIGHEST_BIT_MASK);
-
-        continue;
-      }
-#endif /* ENABLED (JERRY_LINE_INFO) */
     }
 
     /* Only literal and call arguments can be combined. */
@@ -1620,6 +1631,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ESNEXT) */
   }
   JERRY_ASSERT (dst_p == byte_code_p + length);
+
+#if ENABLED (JERRY_LINE_INFO)
+  const ecma_line_info_t *line_info_p = ecma_line_info_finalize (&encoder);
+  ecma_line_info_release (line_info_p);
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
   parse_update_branches (context_p, byte_code_p);
 
@@ -2388,6 +2404,11 @@ parser_save_context (parser_context_t *context_p, /**< context */
   saved_context_p->tagged_template_literal_cp = context_p->tagged_template_literal_cp;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_LINE_INFO)
+  saved_context_p->start_line = context_p->start_line;
+  saved_context_p->start_column = context_p->start_column;
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
 #ifndef JERRY_NDEBUG
   saved_context_p->context_stack_depth = context_p->context_stack_depth;
 #endif /* !JERRY_NDEBUG */
@@ -2460,6 +2481,11 @@ parser_restore_context (parser_context_t *context_p, /**< context */
   context_p->scope_stack_global_end = saved_context_p->scope_stack_global_end;
   context_p->tagged_template_literal_cp = saved_context_p->tagged_template_literal_cp;
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_LINE_INFO)
+  context_p->start_line = saved_context_p->start_line;
+  context_p->start_column = saved_context_p->start_column;
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = saved_context_p->context_stack_depth;

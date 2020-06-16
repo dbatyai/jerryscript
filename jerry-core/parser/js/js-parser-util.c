@@ -473,14 +473,14 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   if (context_p->is_show_opcodes)
   {
-    JERRY_DEBUG_MSG ("  [%3d] CBC_EXT_LINE %d\n", (int) context_p->stack_depth, line);
+    JERRY_DEBUG_MSG ("  [%3d] CBC_LINE_INFO %u %u\n", (int) context_p->stack_depth, context_p->token.line, context_p->token.column);
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+  line = context_p->token.line;
+  uint32_t column = context_p->token.column;
 
-  parser_emit_two_bytes (context_p, CBC_EXT_OPCODE, CBC_EXT_LINE);
-  context_p->byte_code_size += 2;
-
-  context_p->last_line_info_line = line;
+  PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_LINE_INFO);
+  context_p->byte_code_size++;
 
   const uint32_t max_shift_plus_7 = 7 * 5;
   uint32_t shift = 7;
@@ -495,6 +495,29 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
     shift -= 7;
 
     uint8_t byte = (uint8_t) ((line >> shift) & CBC_LOWER_SEVEN_BIT_MASK);
+
+    if (shift > 0)
+    {
+      byte = (uint8_t) (byte | CBC_HIGHEST_BIT_MASK);
+    }
+
+    PARSER_APPEND_TO_BYTE_CODE (context_p, byte);
+    context_p->byte_code_size++;
+  }
+  while (shift > 0);
+
+  shift = 7;
+
+  while (shift < max_shift_plus_7 && (column >> shift) > 0)
+  {
+    shift += 7;
+  }
+
+  do
+  {
+    shift -= 7;
+
+    uint8_t byte = (uint8_t) ((column >> shift) & CBC_LOWER_SEVEN_BIT_MASK);
 
     if (shift > 0)
     {
