@@ -19,6 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
+#include "ecma-line-info.h"
 #include "ecma-property-hashmap.h"
 #include "jcontext.h"
 #include "jrt-bit-fields.h"
@@ -1372,6 +1373,10 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     ecma_value_t *literal_start_p = NULL;
     uint32_t literal_end;
     uint32_t const_literal_end;
+
+#if ENABLED (JERRY_LINE_INFO)
+    ecma_line_info_release (ECMA_GET_NON_NULL_POINTER (const ecma_line_info_t, bytecode_p->line_info_cp));
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {

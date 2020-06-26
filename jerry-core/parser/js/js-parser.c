@@ -1634,7 +1634,7 @@ printf("start line info: %u %u\n", context_p->start_line, context_p->start_colum
 
 #if ENABLED (JERRY_LINE_INFO)
   const ecma_line_info_t *line_info_p = ecma_line_info_finalize (&encoder);
-  ecma_line_info_release (line_info_p);
+  ECMA_SET_NON_NULL_POINTER (compiled_code_p->line_info_cp, line_info_p);
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
   parse_update_branches (context_p, byte_code_p);

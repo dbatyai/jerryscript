@@ -971,6 +971,9 @@ typedef struct
                                      *   is function or regular expression.
                                      *   If function, the other flags must be CBC_CODE_FLAGS...
                                      *   If regexp, the other flags must be RE_FLAG... */
+#if ENABLED (JERRY_LINE_INFO)
+  jmem_cpointer_t line_info_cp;
+#endif /* ENABLED (JERRY_LINE_INFO) */
 } ecma_compiled_code_t;
 
 /**
