@@ -15,6 +15,7 @@
 
 #include "ecma-array-object.h"
 #include "ecma-helpers.h"
+#include "ecma-line-info.h"
 #include "jcontext.h"
 #include "lit-char-helpers.h"
 #include "vm.h"
@@ -74,25 +75,32 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
   JERRY_ASSERT (ecma_op_object_is_fast_array (array_p));
   uint32_t index = 0;
 
-  while (context_p != NULL)
+  while (context_p != NULL && index <= max_depth)
   {
     ecma_value_t resource_name = ecma_get_resource_name (context_p->bytecode_header_p);
     ecma_string_t *str_p = ecma_get_string_from_value (resource_name);
-    ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-    if (ecma_string_is_empty (str_p))
-    {
-      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *)"<unknown>:", 10);
-    }
-    else
-    {
-      ecma_stringbuilder_append (&builder, str_p);
-      ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
-    }
+    ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (str_p);
+    ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
 
-    ecma_string_t *line_str_p = ecma_new_ecma_string_from_uint32 (/*TODO*/ 0);
-    ecma_stringbuilder_append (&builder, line_str_p);
-    ecma_deref_ecma_string (line_str_p);
+    const ecma_line_info_t *line_info_p = ECMA_GET_NON_NULL_POINTER (const ecma_line_info_t,
+                                                                     context_p->bytecode_header_p->line_info_cp);
+    uint32_t offset = (uint32_t) (context_p->byte_code_p - context_p->byte_code_start_p);
+
+    uint32_t line;
+    uint32_t column;
+
+    ecma_line_info_lookup (line_info_p, offset, &line, &column);
+
+    str_p = ecma_new_ecma_string_from_uint32 (line);
+    ecma_stringbuilder_append (&builder, str_p);
+    ecma_deref_ecma_string (str_p);
+
+    ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
+
+    str_p = ecma_new_ecma_string_from_uint32 (column);
+    ecma_stringbuilder_append (&builder, str_p);
+    ecma_deref_ecma_string (str_p);
 
     ecma_string_t *builder_str_p = ecma_stringbuilder_finalize (&builder);
     ecma_fast_array_set_property (array_p, index, ecma_make_string_value (builder_str_p));
@@ -100,11 +108,6 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
     context_p = context_p->prev_context_p;
     index++;
-
-    if (index >= max_depth)
-    {
-      break;
-    }
   }
 
   return result_array;

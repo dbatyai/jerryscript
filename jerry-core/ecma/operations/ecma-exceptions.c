@@ -227,19 +227,6 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
 {
   ecma_object_t *error_obj_p;
 
-#if ENABLED (JERRY_LINE_INFO)
-  vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
-  const ecma_line_info_t *line_info_p = ECMA_GET_NON_NULL_POINTER (const ecma_line_info_t,
-                                                                   context_p->bytecode_header_p->line_info_cp);
-  uint32_t offset = (uint32_t) (context_p->byte_code_p - context_p->byte_code_start_p);
-
-  uint32_t line;
-  uint32_t column;
-
-  ecma_line_info_lookup (line_info_p, offset, &line, &column);
-  printf ("raise at: %u %u\n", line, column);
-#endif /* ENABLED (JERRY_LINE_INFO) */
-
   if (msg_p != NULL)
   {
     ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p,

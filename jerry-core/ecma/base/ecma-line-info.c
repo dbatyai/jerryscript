@@ -139,14 +139,6 @@ append_row:
   const uint32_t row_size = (uint32_t) (current_p - row);
   JERRY_ASSERT (row_size <= ECMA_LINE_INFO_MAX_ENCODED_ROW_SIZE);
   ecma_line_info_append (encoder_p, row, row_size);
-
-  printf ("encode (%u %u %u) -> (", offset, line, column);
-  for (uint32_t i = 0; i < row_size; i++)
-  {
-    printf("%hhu ", row[i]);
-  }
-
-  printf(")\n");
 } /* ecma_line_info_encode */
 
 /**
@@ -250,7 +242,6 @@ ecma_line_info_lookup (const ecma_line_info_t *line_info_p,
 found:
   *line_p = line;
   *column_p = column;
-  printf ("%u: %u %u\n", offset, line, column);
 } /* ecma_line_info_lookup */
 
 /**

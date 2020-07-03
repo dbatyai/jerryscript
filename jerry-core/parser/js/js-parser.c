@@ -941,8 +941,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   ecma_value_t *literal_pool_p;
   uint8_t *dst_p;
 
-printf("start line info: %u %u\n", context_p->start_line, context_p->start_column);
-
 #if ENABLED (JERRY_ESNEXT)
   if ((context_p->status_flags & (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
       == (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
