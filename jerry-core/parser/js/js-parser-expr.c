@@ -1810,6 +1810,10 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         }
       }
 
+#if ENABLED (JERRY_LINE_INFO)
+      parser_emit_line_info (context_p, context_p->token.line, context_p->token.column);
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
       parser_emit_cbc_literal_from_token (context_p, (uint16_t) opcode);
       break;
     }
@@ -2100,6 +2104,10 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         size_t call_arguments = 0;
         uint16_t opcode = CBC_CALL;
         bool is_eval = false;
+#if ENABLED (JERRY_LINE_INFO)
+        parser_line_counter_t call_line = context_p->token.line;
+        parser_line_counter_t call_column = context_p->token.column;
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
         parser_push_result (context_p);
 
@@ -2219,6 +2227,10 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
         lexer_next_token (context_p);
+
+#if ENABLED (JERRY_LINE_INFO)
+        parser_emit_line_info (context_p, call_line, call_column);
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
         if (is_eval)
         {
@@ -2591,10 +2603,6 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
 
   parser_push_result (context_p);
 
-#if ENABLED (JERRY_LINE_INFO)
-   parser_emit_line_info (context_p, context_p->token.line, false);
-#endif /* ENABLED (JERRY_LINE_INFO) */
-
   if (context_p->token.type == LEXER_ASSIGN)
   {
     parser_append_binary_single_assignment_token (context_p, 0);
@@ -2798,6 +2806,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         continue;
       }
     }
+
     parser_emit_cbc (context_p, (uint16_t) opcode);
   }
 } /* parser_process_binary_opcodes */
@@ -3001,10 +3010,6 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
     context_p->last_breakpoint_line = ident_line_counter;
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-
-#if ENABLED (JERRY_LINE_INFO)
-  parser_emit_line_info (context_p, ident_line_counter, false);
-#endif /* ENABLED (JERRY_LINE_INFO) */
 } /* parser_pattern_form_assignment */
 
 /**

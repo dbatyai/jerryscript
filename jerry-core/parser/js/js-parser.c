@@ -1425,7 +1425,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
 #if ENABLED (JERRY_LINE_INFO)
   ecma_line_info_encoder_t encoder;
-  ecma_line_info_initialize (&encoder, context_p->start_line, context_p->start_column);
+  ecma_line_info_initialize (&encoder);
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
   while (page_p != last_page_p || offset < last_position)
@@ -1454,8 +1454,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
       continue;
     }
+
 #if ENABLED (JERRY_LINE_INFO)
-    else if (opcode == CBC_LINE_INFO)
+    if (opcode == CBC_LINE_INFO)
     {
       uint32_t line = 0;
       uint32_t column = 0;
@@ -1478,7 +1479,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       }
       while (byte & CBC_HIGHEST_BIT_MASK);
 
-      /* If the next opcode is also a line info adjustment then the current one is omitted. */
+      /* If the next opcode is also a line info then the current one is skipped. */
       if (page_p->bytes[offset] != CBC_LINE_INFO)
       {
         ecma_line_info_encode (&encoder, (uint32_t) (dst_p - byte_code_p), line, column);

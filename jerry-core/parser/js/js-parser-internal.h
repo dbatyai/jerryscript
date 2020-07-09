@@ -879,7 +879,7 @@ void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_
 
 #if ENABLED (JERRY_LINE_INFO)
 
-void parser_emit_line_info (parser_context_t *context_p, uint32_t line, bool flush_cbc);
+void parser_emit_line_info (parser_context_t *context_p, uint32_t line, uint32_t column);
 
 #endif /* ENABLED (JERRY_LINE_INFO) */
 

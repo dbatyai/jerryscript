@@ -29,18 +29,14 @@
  * TODO
  */
 void
-ecma_line_info_initialize (ecma_line_info_encoder_t *encoder_p,
-                           uint32_t line,
-                           uint32_t column)
+ecma_line_info_initialize (ecma_line_info_encoder_t *encoder_p)
 {
   encoder_p->current_offset = 0;
-  encoder_p->current_line = line;
-  encoder_p->current_column = column;
 
   const uint32_t initial_size = sizeof (ecma_line_info_t);
   ecma_line_info_t *line_info_p = jmem_heap_alloc_block (initial_size);
-  line_info_p->start_line = line;
-  line_info_p->start_column = column;
+  line_info_p->start_line = 0;
+  line_info_p->start_column = 0;
   line_info_p->size = initial_size;
 
   encoder_p->line_info_p = line_info_p;
@@ -72,10 +68,19 @@ ecma_line_info_encode (ecma_line_info_encoder_t *encoder_p,
                        uint32_t line,
                        uint32_t column)
 {
-  if (line == encoder_p->current_line && column == encoder_p->current_column)
+  if (JERRY_UNLIKELY (encoder_p->line_info_p->start_line == 0))
   {
+    JERRY_ASSERT (encoder_p->line_info_p->start_column == 0);
+
+    encoder_p->current_line = line;
+    encoder_p->current_column = column;
+
+    encoder_p->line_info_p->start_line = line;
+    encoder_p->line_info_p->start_column = column;
     return;
   }
+
+  JERRY_ASSERT (line != encoder_p->current_line || column != encoder_p->current_column);
 
   uint8_t row[ECMA_LINE_INFO_MAX_ENCODED_ROW_SIZE];
   uint8_t *current_p = row;

@@ -87,9 +87,8 @@ typedef struct {
 } ecma_line_info_encoder_t;
 
 void
-ecma_line_info_initialize (ecma_line_info_encoder_t *encoder,
-                           uint32_t line,
-                           uint32_t column);
+ecma_line_info_initialize (ecma_line_info_encoder_t *encoder);
+
 void
 ecma_line_info_encode (ecma_line_info_encoder_t *encoder,
                        uint32_t offset,

@@ -556,10 +556,6 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_LINE_INFO)
-       parser_emit_line_info (context_p, context_p->token.line, false);
-#endif /* ENABLED (JERRY_LINE_INFO) */
-
         uint16_t index = context_p->lit_object.index;
 
         lexer_next_token (context_p);
@@ -1634,9 +1630,6 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 
   if (context_p->token.type != LEXER_SEMICOLON)
   {
-#if ENABLED (JERRY_LINE_INFO)
-      parser_emit_line_info (context_p, context_p->token.line, true);
-#endif
     parser_parse_expression (context_p, PARSE_EXPR);
 
     if (context_p->token.type != LEXER_SEMICOLON)
@@ -1787,10 +1780,6 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
     }
 
     switch_case_was_found = true;
-
-#if ENABLED (JERRY_LINE_INFO)
-      parser_emit_line_info (context_p, context_p->token.line, true);
-#endif /* ENABLED (JERRY_LINE_INFO) */
 
     parser_parse_expression (context_p, PARSE_EXPR);
 
@@ -2687,9 +2676,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         context_p->last_breakpoint_line = context_p->token.line;
       }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO)
-      parser_emit_line_info (context_p, context_p->token.line, false);
-#endif /* ENABLED (JERRY_LINE_INFO) */
 
       lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
       parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
@@ -2771,21 +2757,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       context_p->last_breakpoint_line = context_p->token.line;
     }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-
-#if ENABLED (JERRY_LINE_INFO)
-    if (context_p->token.type != LEXER_SEMICOLON
-        && context_p->token.type != LEXER_LEFT_BRACE
-        && context_p->token.type != LEXER_RIGHT_BRACE
-        && context_p->token.type != LEXER_KEYW_VAR
-        && context_p->token.type != LEXER_KEYW_LET
-        && context_p->token.type != LEXER_KEYW_CONST
-        && context_p->token.type != LEXER_KEYW_FUNCTION
-        && context_p->token.type != LEXER_KEYW_CASE
-        && context_p->token.type != LEXER_KEYW_DEFAULT)
-    {
-      parser_emit_line_info (context_p, context_p->token.line, true);
-    }
-#endif /* ENABLED (JERRY_LINE_INFO) */
 
     switch (context_p->token.type)
     {
@@ -2980,6 +2951,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_KEYW_THROW:
       {
+#if ENABLED (JERRY_LINE_INFO)
+        parser_emit_line_info (context_p, context_p->token.line, context_p->token.column);
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
         lexer_next_token (context_p);
         if (context_p->token.flags & LEXER_WAS_NEWLINE)
         {

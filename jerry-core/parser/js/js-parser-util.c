@@ -463,9 +463,9 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
 void
 parser_emit_line_info (parser_context_t *context_p, /**< context */
                        uint32_t line, /**< current line */
-                       bool flush_cbc) /**< flush last byte code */
+                       uint32_t column) /** < current column */
 {
-  if (flush_cbc && context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
+  if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
     parser_flush_cbc (context_p);
   }
@@ -473,11 +473,9 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   if (context_p->is_show_opcodes)
   {
-    JERRY_DEBUG_MSG ("  [%3d] CBC_LINE_INFO %u %u\n", (int) context_p->stack_depth, context_p->token.line, context_p->token.column);
+    JERRY_DEBUG_MSG ("  [%3d] CBC_LINE_INFO %u %u\n", (int) context_p->stack_depth, line, column);
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
-  line = context_p->token.line;
-  uint32_t column = context_p->token.column;
 
   PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_LINE_INFO);
   context_p->byte_code_size++;
