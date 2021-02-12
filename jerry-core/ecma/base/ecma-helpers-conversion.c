@@ -790,7 +790,12 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 uint32_t
 ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
 {
-  if (JERRY_UNLIKELY (ecma_number_is_zero (num) || !ecma_number_is_finite (num)))
+  if (JERRY_LIKELY (num >= ECMA_NUMBER_ZERO && num <= (ecma_number_t) UINT32_MAX))
+  {
+    return (uint32_t) num;
+  }
+
+  if (JERRY_UNLIKELY (!ecma_number_is_finite (num)))
   {
     return 0;
   }
@@ -956,8 +961,6 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
-
-  JERRY_ASSERT (ecma_number_get_next (ecma_number_get_prev (num)) == num);
 
   /* 5. */
   uint32_t num_uint32 = ecma_number_to_uint32 (num);

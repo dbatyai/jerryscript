@@ -554,23 +554,6 @@ ecma_make_nan_value (void)
 } /* ecma_make_nan_value */
 
 /**
- * Checks whether the passed number is +0.0
- *
- * @return true, if it is +0.0, false otherwise
- */
-static inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
-ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
-{
-  ecma_number_accessor_t u;
-  u.as_ecma_number_t = ecma_number;
-#if !JERRY_NUMBER_TYPE_FLOAT64
-  return u.as_uint32_t == 0;
-#else /* JERRY_NUMBER_TYPE_FLOAT64 */
-  return u.as_uint64_t == 0;
-#endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
-} /* ecma_is_number_equal_to_positive_zero */
-
-/**
  * Encode a property length number into an ecma-value
  *
  * @return ecma-value
@@ -597,7 +580,7 @@ ecma_make_number_value (ecma_number_t ecma_number) /**< number to be encoded */
   ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
 
   if ((ecma_number_t) integer_value == ecma_number
-      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+      && ((integer_value == 0) ? ecma_number_is_positive_zero (ecma_number)
                                : ECMA_IS_INTEGER_NUMBER (integer_value)))
   {
     return ecma_make_integer_value (integer_value);
@@ -1051,7 +1034,7 @@ ecma_update_float_number (ecma_value_t float_value, /**< original float value */
   ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (float_value);
 
   if ((ecma_number_t) integer_number == new_number
-      && ((integer_number == 0) ? ecma_is_number_equal_to_positive_zero (new_number)
+      && ((integer_number == 0) ? ecma_number_is_positive_zero (new_number)
                                 : ECMA_IS_INTEGER_NUMBER (integer_number)))
   {
     ecma_dealloc_number (number_p);
@@ -1102,7 +1085,7 @@ ecma_value_assign_number (ecma_value_t *value_p, /**< [in, out] ecma value */
   ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
 
   if ((ecma_number_t) integer_value == ecma_number
-      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+      && ((integer_value == 0) ? ecma_number_is_positive_zero (ecma_number)
                                : ECMA_IS_INTEGER_NUMBER (integer_value)))
   {
     if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT

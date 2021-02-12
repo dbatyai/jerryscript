@@ -1249,15 +1249,7 @@ typedef struct
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
-
-/**
- * It makes possible to read/write an ecma_number_t as uint32_t without strict aliasing rule violation.
- */
-typedef union
-{
-  ecma_number_t as_ecma_number_t;
-  uint32_t as_uint32_t;
-} ecma_number_accessor_t;
+typedef uint32_t ecma_number_bits_t;
 
 #define DOUBLE_TO_ECMA_NUMBER_T(value) (ecma_number_t) (value)
 
@@ -1289,20 +1281,17 @@ typedef union
  *          IEEE-754 2008, 3.6, Table 3.5
  */
 #define ECMA_NUMBER_FRACTION_WIDTH   (23)
+
+/**
+ * Exponent bias
+ */
+#define ECMA_NUMBER_EXPONENT_BIAS 127
 #elif JERRY_NUMBER_TYPE_FLOAT64
 /**
  * Description of an ecma-number
  */
 typedef double ecma_number_t;
-
-/**
- * It makes possible to read/write an ecma_number_t as uint64_t without strict aliasing rule violation.
- */
-typedef union
-{
-  ecma_number_t as_ecma_number_t;
-  uint64_t as_uint64_t;
-} ecma_number_accessor_t;
+typedef uint64_t ecma_number_bits_t;
 
 #define DOUBLE_TO_ECMA_NUMBER_T(value) value
 
@@ -1334,6 +1323,11 @@ typedef union
  *          IEEE-754 2008, 3.6, Table 3.5
  */
 #define ECMA_NUMBER_FRACTION_WIDTH   (52)
+
+/**
+ * Exponent bias
+ */
+#define ECMA_NUMBER_EXPONENT_BIAS 1023
 #endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**

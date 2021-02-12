@@ -292,10 +292,11 @@ static uint32_t
 ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
                               ecma_bigint_digit_t *digits_p) /**< [out] BigInt digits */
 {
+  bool sign;
   uint32_t biased_exp;
-  uint64_t fraction;
+  ecma_number_bits_t fraction;
 
-  ecma_number_unpack (number, NULL, &biased_exp, &fraction);
+  ecma_number_unpack (number, &sign, &biased_exp, &fraction);
 
   if (biased_exp == 0 && fraction == 0)
   {
@@ -310,7 +311,7 @@ ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
   }
 
   biased_exp -= ((1 << (ECMA_NUMBER_BIASED_EXP_WIDTH - 1)) - 1);
-  fraction |= ((uint64_t) 1) << ECMA_NUMBER_FRACTION_WIDTH;
+  fraction |= ((ecma_number_bits_t) 1) << ECMA_NUMBER_FRACTION_WIDTH;
 
   if (biased_exp <= ECMA_NUMBER_FRACTION_WIDTH)
   {
@@ -529,35 +530,35 @@ ecma_bigint_to_number (ecma_value_t value) /**< BigInt value */
     }
   }
 
-  uint64_t fraction = 0;
+  ecma_number_bits_t fraction = 0;
   ecma_bigint_digit_t shift_left;
 
   if (digits_p[-1] == 1)
   {
     JERRY_ASSERT (size > sizeof (ecma_bigint_digit_t));
 
-    fraction = ((uint64_t) digits_p[-2]) << (8 * sizeof (ecma_bigint_digit_t));
+    fraction = ((ecma_number_bits_t) digits_p[-2]) << (8 * sizeof (ecma_bigint_digit_t));
     shift_left = (uint32_t) (8 * sizeof (ecma_bigint_digit_t));
 
     if (size >= 3 * sizeof (ecma_bigint_digit_t))
     {
-      fraction |= (uint64_t) digits_p[-3];
+      fraction |= (ecma_number_bits_t) digits_p[-3];
     }
   }
   else
   {
     shift_left = ecma_big_uint_count_leading_zero (digits_p[-1]) + 1;
 
-    fraction = ((uint64_t) digits_p[-1]) << (8 * sizeof (ecma_bigint_digit_t) + shift_left);
+    fraction = ((ecma_number_bits_t) digits_p[-1]) << (8 * sizeof (ecma_bigint_digit_t) + shift_left);
 
     if (size >= 2 * sizeof (ecma_bigint_digit_t))
     {
-      fraction |= ((uint64_t) digits_p[-2]) << shift_left;
+      fraction |= ((ecma_number_bits_t) digits_p[-2]) << shift_left;
     }
 
     if (size >= 3 * sizeof (ecma_bigint_digit_t))
     {
-      fraction |= ((uint64_t) digits_p[-3]) >> (8 * sizeof (ecma_bigint_digit_t) - shift_left);
+      fraction |= ((ecma_number_bits_t) digits_p[-3]) >> (8 * sizeof (ecma_bigint_digit_t) - shift_left);
     }
   }
 
